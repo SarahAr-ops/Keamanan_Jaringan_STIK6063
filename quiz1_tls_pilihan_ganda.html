@@ -530,7 +530,7 @@
     const POINTS_PER_QUESTION = 10;
 
     // TODO (Reika): ganti dengan Web App URL Google Apps Script yang aktif untuk quiz ini.
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxxxxxxxxxxxH6ty_FC1fg/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzN09tXvYfAWq4XM3uq-d6vW9sN74Zx-CNerRp1RgYdakKkFmQk54rUlocTH6ty_FC1fg/exec";
     const DRIVE_FOLDER_ID = "1JweoxSEcJuoQIh-uaMlkbRw-Iy9JCeiY";
 
     /* ================= QUESTIONS ================= */
@@ -961,7 +961,7 @@
         });
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', https://script.google.com/macros/s/AKfycbzN09tXvYfAWq4XM3uq-d6vW9sN74Zx-CNerRp1RgYdakKkFmQk54rUlocTH6ty_FC1fg/exec, true);
+        xhr.open('POST', GOOGLE_SCRIPT_URL, true);
         xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
         xhr.timeout = 30000;
         xhr.onload = function () {
