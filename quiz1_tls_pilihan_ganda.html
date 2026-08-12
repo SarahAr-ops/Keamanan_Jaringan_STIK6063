@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz 1 - Transport-Level Security | STIK6063</title>
+  <meta name="description" content="Quiz 1 Interaktif Pilihan Ganda mata kuliah Keamanan Jaringan STIK6063 - Transport-Level Security." />
+
+  <!-- jsPDF + html2canvas CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+    :root {
+      --navy: #0d2b55;
+      --navy-dark: #081a38;
+      --navy-mid: #163d73;
+      --accent: #2563eb;
+      --accent-light: #3b82f6;
+      --accent-dark: #1d4ed8;
+      --gold: #f59e0b;
+      --gold-dark: #b45309;
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+      --radius: 10px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .12);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, .15);
+      --shadow-lg: 0 8px 30px rgba(0, 0, 0, .18);
+      --transition: all .2s ease;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.6;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(13, 43, 85, 0.035), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .hidden { display: none !important; }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-mid) 60%, var(--accent) 100%);
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      box-shadow: var(--shadow-md);
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .header-inner {
+      position: relative;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 26px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .header-icon {
+      flex: 0 0 auto;
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+    .header-text { flex: 1 1 auto; }
+    .header-text .eyebrow-light {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .header-text h1 { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+    .header-text .subtitle { font-size: 12.5px; color: rgba(255,255,255,.78); margin-top: 3px; }
+    .header-badge {
+      margin-left: auto;
+      background: var(--gold);
+      color: var(--navy-dark);
+      font-weight: 700;
+      font-size: 11px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    @media (max-width: 700px) {
+      .header-inner { flex-wrap: wrap; }
+      .header-badge { margin-left: 0; }
+    }
+
+    main.app-layout {
+      position: relative;
+      z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+    }
+    .card-header {
+      background: linear-gradient(90deg, var(--navy) 0%, var(--navy-mid) 100%);
+      color: var(--white);
+      padding: 14px 22px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-header .step-badge {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .card-header h2 { font-size: 15.5px; font-weight: 600; }
+    .card-body { padding: 24px; }
+
+    /* FORM */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .form-group label {
+      font-size: 12px; font-weight: 600; color: var(--gray-600);
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .form-group input[type="text"] {
+      border: 1.5px solid var(--gray-300);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--gray-800);
+      transition: var(--transition);
+      outline: none;
+      background: var(--white);
+    }
+    .form-group input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    .form-group input.err { border-color: var(--red); }
+
+    .btn {
+      font-family: var(--font-sans);
+      font-size: 14px; font-weight: 600;
+      border: none; border-radius: var(--radius);
+      padding: 11px 22px; cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: .5; cursor: not-allowed !important; transform: none !important; }
+    .btn-primary { background: var(--accent); color: var(--white); box-shadow: var(--shadow-sm); }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-dark); box-shadow: var(--shadow-md); }
+    .btn-secondary { background: var(--navy-mid); color: var(--white); }
+    .btn-secondary:hover:not(:disabled) { background: var(--navy-dark); }
+    .btn-ghost { background: transparent; color: var(--gray-600); border: 1.5px solid var(--gray-300); }
+    .btn-ghost:hover:not(:disabled) { color: var(--gray-800); border-color: var(--gray-400); background: var(--gray-50); }
+    .btn-block { width: 100%; }
+    .btn-danger { background: var(--red); color: var(--white); }
+    .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+    .info-box {
+      background: #eff6ff;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #1e3a8a;
+      margin-bottom: 20px;
+      line-height: 1.55;
+    }
+    .info-box b { color: #1e3a8a; }
+    .info-box ul { margin: 6px 0 0 18px; }
+
+    /* TOPBAR */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+      background: var(--white);
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-wrap { flex: 1; min-width: 220px; }
+    .progress-labels {
+      display: flex; justify-content: space-between;
+      font-family: var(--font-mono); font-size: 11.5px; color: var(--gray-600);
+      margin-bottom: 8px;
+    }
+    .progress-labels b { color: var(--navy-dark); font-weight: 700; }
+    .progress-track {
+      height: 8px; border-radius: 99px; background: var(--gray-100);
+      border: 1px solid var(--gray-200); overflow: hidden;
+      display: flex; gap: 3px; padding: 2px;
+    }
+    .progress-seg { flex: 1; border-radius: 99px; background: var(--gray-200); transition: background .25s ease; }
+    .progress-seg.done { background: var(--green); }
+    .progress-seg.current { background: var(--accent); }
+
+    .timer-block {
+      min-width: 120px; padding: 8px 14px;
+      background: var(--white); border: 1.5px solid var(--gray-300);
+      border-radius: 8px; text-align: right;
+    }
+    .timer-label {
+      display: block; color: var(--gray-600); font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .timer-value { display: block; color: var(--navy-dark); font-family: var(--font-mono); font-size: 20px; font-weight: 700; letter-spacing: .04em; }
+    .timer-block.warning { border-color: var(--gold); background: #fffbeb; }
+    .timer-block.warning .timer-value { color: var(--gold-dark); }
+    .timer-block.expired { border-color: var(--red); background: var(--red-light); }
+    .timer-block.expired .timer-value { color: var(--red); }
+
+    /* JUMP DOTS */
+    .jump-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .jump-dot {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 1.5px solid var(--gray-300); background: var(--white);
+      color: var(--gray-600); font-family: var(--font-mono); font-weight: 700; font-size: 12.5px;
+      cursor: pointer; transition: var(--transition);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .jump-dot:hover { border-color: var(--accent); color: var(--accent); }
+    .jump-dot.done { background: var(--green-light); border-color: var(--green); color: var(--green); }
+    .jump-dot.current { background: var(--accent); border-color: var(--accent); color: var(--white); }
+
+    /* QUESTION */
+    .q-index { font-family: var(--font-mono); font-size: 12px; color: var(--gray-600); margin-bottom: 10px; font-weight: 600; }
+    .q-text { font-size: 17.5px; font-weight: 600; line-height: 1.5; margin: 0 0 22px; color: var(--navy-dark); }
+
+    .option-list { display: flex; flex-direction: column; gap: 10px; }
+    .option-btn {
+      display: flex; align-items: center; gap: 12px;
+      text-align: left;
+      border: 1.5px solid var(--gray-300);
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--gray-800);
+      width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { border-color: var(--accent-light); background: #f5f8ff; }
+    .option-letter {
+      flex: 0 0 auto;
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid var(--gray-300);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-weight: 700; font-size: 12.5px; color: var(--gray-600);
+      transition: var(--transition);
+    }
+    .option-btn.selected { border-color: var(--accent); background: #eff6ff; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+    .option-btn.selected .option-letter { background: var(--accent); border-color: var(--accent); color: var(--white); }
+    .option-btn:disabled { cursor: not-allowed; opacity: .85; }
+
+    /* review states (results screen only) */
+    .option-btn.review-correct { border-color: var(--green); background: var(--green-light); }
+    .option-btn.review-correct .option-letter { background: var(--green); border-color: var(--green); color: var(--white); }
+    .option-btn.review-wrong { border-color: var(--red); background: var(--red-light); }
+    .option-btn.review-wrong .option-letter { background: var(--red); border-color: var(--red); color: var(--white); }
+
+    .card-actions {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--gray-200);
+    }
+
+    /* RESULTS */
+    .results-head { text-align: center; margin-bottom: 20px; }
+    .results-name { font-size: 14.5px; color: var(--gray-600); font-family: var(--font-mono); margin-top: 4px; }
+    .results-score { font-size: 58px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 2px; color: var(--navy-dark); }
+    .results-score span { font-size: 22px; color: var(--gray-400); font-weight: 600; }
+    .results-tag { font-family: var(--font-mono); font-size: 12.5px; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+    .results-summary-row {
+      display: flex; justify-content: center; gap: 22px; margin: 18px 0 4px;
+      font-family: var(--font-mono); font-size: 12.5px;
+    }
+    .results-summary-row .stat-correct { color: var(--green); font-weight: 700; }
+    .results-summary-row .stat-wrong { color: var(--red); font-weight: 700; }
+    .submission-status { margin: 14px auto 0; max-width: 560px; color: var(--gray-600); font-size: 13px; line-height: 1.55; text-align: center; }
+
+    .review-block { margin-top: 6px; border-top: 1px solid var(--gray-200); padding-top: 22px; }
+    .review-item { margin-bottom: 26px; }
+    .review-item:last-child { margin-bottom: 0; }
+    .review-item .q-index { display: flex; align-items: center; gap: 8px; }
+    .verdict-chip {
+      font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+      padding: 2px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .verdict-chip.correct { background: var(--green-light); color: var(--green); }
+    .verdict-chip.wrong { background: var(--red-light); color: var(--red); }
+
+    .ref-box {
+      margin-top: 14px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+    .ref-box b { color: var(--navy-dark); }
+
+    /* MODALS */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(8,26,56,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s ease;
+      padding: 20px;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box {
+      background: var(--white); border-radius: 14px; max-width: 420px; width: 100%;
+      padding: 26px 26px 22px; box-shadow: var(--shadow-lg);
+      transform: translateY(10px); transition: transform .2s ease;
+      text-align: center;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0); }
+    .modal-box .modal-icon { font-size: 38px; margin-bottom: 10px; }
+    .modal-box h3 { font-size: 17px; color: var(--navy-dark); margin-bottom: 8px; }
+    .modal-box p { font-size: 13.5px; color: var(--gray-600); margin-bottom: 20px; line-height: 1.55; }
+    .modal-btn-row { display: flex; gap: 10px; }
+    .modal-btn-row .btn { flex: 1; }
+
+    footer { text-align: center; padding: 20px; font-size: 11.5px; color: var(--gray-400); position: relative; z-index: 1; }
+
+    @media print {
+      header, .card-actions, footer, .modal-overlay, .jump-row { display: none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="header-icon">🔐</div>
+      <div class="header-text">
+        <div class="eyebrow-light">STIK6063 · Keamanan Jaringan</div>
+        <h1>Quiz 1 — Transport-Level Security</h1>
+        <div class="subtitle">Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom · Universitas Syiah Kuala</div>
+      </div>
+      <div class="header-badge">Pilihan Ganda</div>
+    </div>
+  </header>
+
+  <main class="app-layout">
+
+    <!-- ================= GATE SCREEN ================= -->
+    <section id="screen-gate" class="card">
+      <div class="card-header">
+        <div class="step-badge">1</div>
+        <h2>Identitas Mahasiswa</h2>
+      </div>
+      <div class="card-body">
+        <div class="info-box">
+          <b>Sebelum memulai, perhatikan hal berikut:</b>
+          <ul>
+            <li>Kuis terdiri dari <b>10 soal pilihan ganda</b>, waktu pengerjaan <b>10 menit</b>.</li>
+            <li>Setiap jawaban benar bernilai <b>10 poin</b>, jawaban salah <b>0 poin</b> (skor maksimum 100).</li>
+            <li>Kuis bersifat <b>tutup buku/bahan ajar, notebook, dan smartphone</b>.</li>
+            <li>Setelah dikumpulkan (atau waktu habis), jawaban akan <b>terkunci otomatis</b>.</li>
+            <li>Hasil quiz akan otomatis diunduh sebagai PDF dan dikirim ke Google Drive dosen.</li>
+          </ul>
+        </div>
+        <div class="form-group">
+          <label for="input-name">Nama Mahasiswa</label>
+          <input type="text" id="input-name" placeholder="Masukkan nama lengkap" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label for="input-nim">NIM</label>
+          <input type="text" id="input-nim" placeholder="Masukkan NIM" autocomplete="off" />
+        </div>
+        <button class="btn btn-primary btn-block" id="btn-start">Mulai Kuis →</button>
+      </div>
+    </section>
+
+    <!-- ================= QUIZ SCREEN ================= -->
+    <section id="screen-quiz" class="hidden">
+      <div class="topbar">
+        <div class="progress-wrap">
+          <div class="progress-labels">
+            <span>Soal <b id="progress-current">1</b> / <span id="progress-total">10</span></span>
+            <span id="progress-answered-label">0 terjawab</span>
+          </div>
+          <div class="progress-track" id="progress-track"></div>
+        </div>
+        <div class="timer-block" id="timer-block">
+          <span class="timer-label">Sisa Waktu</span>
+          <span class="timer-value" id="timer-value">10:00</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+          <div class="step-badge" id="q-badge">1</div>
+          <h2>Soal Pilihan Ganda</h2>
+        </div>
+        <div class="card-body">
+          <div class="q-index" id="q-index-label">SOAL 1 DARI 10</div>
+          <div class="q-text" id="q-text"></div>
+          <div class="option-list" id="option-list"></div>
+
+          <div class="card-actions">
+            <button class="btn btn-ghost" id="btn-prev">← Sebelumnya</button>
+            <button class="btn btn-secondary" id="btn-next">Berikutnya →</button>
+            <button class="btn btn-primary hidden" id="btn-finish">Selesai &amp; Kumpulkan ✓</button>
+          </div>
+
+          <div class="jump-row" id="jump-row"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RESULTS SCREEN ================= -->
+    <section id="screen-results" class="hidden card">
+      <div class="card-body">
+        <div class="results-head">
+          <div class="results-tag">Hasil Kuis</div>
+          <div class="results-score" id="results-score">0<span>/100</span></div>
+          <div class="results-name" id="results-name"></div>
+          <div class="results-summary-row">
+            <span class="stat-correct" id="stat-correct">0 benar</span>
+            <span class="stat-wrong" id="stat-wrong">0 salah</span>
+          </div>
+          <div class="submission-status" id="submission-status">Menyiapkan PDF dan mengirim ke Google Drive...</div>
+        </div>
+
+        <div class="review-block" id="review-block"></div>
+
+        <div class="card-actions" style="justify-content: flex-end; gap: 10px;">
+          <button class="btn btn-ghost" id="btn-print">🖨️ Print</button>
+          <button class="btn btn-secondary" id="btn-download-pdf">⬇️ Unduh PDF</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>© 2026 Teknik Komputer · DTEK-FT · Universitas Syiah Kuala</footer>
+
+  <!-- ================= CONFIRM SUBMIT MODAL ================= -->
+  <div class="modal-overlay" id="modal-confirm">
+    <div class="modal-box">
+      <div class="modal-icon">📝</div>
+      <h3>Kumpulkan Jawaban?</h3>
+      <p id="modal-confirm-text">Anda telah menjawab <b>0 dari 10</b> soal. Jawaban tidak dapat diubah setelah dikumpulkan. Yakin ingin melanjutkan?</p>
+      <div class="modal-btn-row">
+        <button class="btn btn-ghost" id="modal-cancel">Batal</button>
+        <button class="btn btn-primary" id="modal-confirm-yes">Ya, Kumpulkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TIME UP MODAL ================= -->
+  <div class="modal-overlay" id="modal-timeup">
+    <div class="modal-box">
+      <div class="modal-icon">⏰</div>
+      <h3>Waktu Habis</h3>
+      <p>Waktu pengerjaan kuis telah selesai. Jawaban Anda akan dikumpulkan secara otomatis.</p>
+      <div class="modal-btn-row">
+        <button class="btn btn-primary" id="modal-timeup-ok">Lihat Hasil</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    /* ================= CONFIG ================= */
+    const QUIZ_DURATION_SECONDS = 10 * 60; // 10 menit
+    const POINTS_PER_QUESTION = 10;
+
+    // TODO (Reika): ganti dengan Web App URL Google Apps Script yang aktif untuk quiz ini.
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxxxxxxxxxxxxxxxxxxxxxxxH6ty_FC1fg/exec";
+    const DRIVE_FOLDER_ID = "1JweoxSEcJuoQIh-uaMlkbRw-Iy9JCeiY";
+
+    /* ================= QUESTIONS ================= */
+    const QUESTIONS = [
+      {
+        text: "Manakah dari urutan berikut yang merupakan 5 lapisan pada TCP/IP (stack protocol Internet) dari bawah ke atas?",
+        options: {
+          A: "Application, Transport, Network, Data Link, Physical",
+          B: "Physical, Data Link, Network, Transport, Application",
+          C: "Physical, Network, Transport, Session, Application",
+          D: "Physical, Link, Internet, Transport, Presentation"
+        },
+        correct: "B",
+        reference: "Urutan lapisan TCP/IP dari bawah ke atas adalah Physical, Data Link, Network, Transport, Application."
+      },
+      {
+        text: "Protokol jaringan pada lapisan aplikasi yang digunakan oleh Web, tetapi rentan terhadap serangan karena mengirimkan data dalam bentuk plaintext (tanpa enkripsi) adalah...",
+        options: { A: "HTTPS", B: "FTP", C: "HTTP", D: "SSH" },
+        correct: "C",
+        reference: "HTTP mengirimkan data dalam bentuk plaintext sehingga rentan terhadap penyadapan, berbeda dengan HTTPS yang sudah terenkripsi."
+      },
+      {
+        text: "Protokol pada lapisan transport (Transport Layer) yang umumnya digunakan oleh aplikasi Web (HTTP/HTTPS) untuk pengiriman data secara handal dan terurut adalah...",
+        options: { A: "UDP", B: "TCP", C: "ICMP", D: "IP" },
+        correct: "B",
+        reference: "TCP menyediakan pengiriman data yang handal (reliable) dan terurut (ordered), sehingga digunakan oleh HTTP/HTTPS."
+      },
+      {
+        text: "Berikut ini yang merupakan contoh serangan pasif (passive attack) yang dapat dilakukan terhadap pesan yang dikirimkan oleh aplikasi Web/HTTP adalah...",
+        options: {
+          A: "Eavesdropping / Sniffing (Penyadapan)",
+          B: "Man-in-the-Middle / Data Modification (Pengubahan Data)",
+          C: "Replay Attack (Pengiriman Ulang Pesan)",
+          D: "Impersonation / Masquerading (Pemalsuan Identitas)"
+        },
+        correct: "A",
+        reference: "Eavesdropping/Sniffing bersifat pasif karena penyerang hanya menyadap tanpa mengubah isi pesan."
+      },
+      {
+        text: "Berikut ini yang merupakan contoh serangan aktif (active attack) terhadap pesan yang dikirimkan oleh aplikasi Web/HTTP adalah...",
+        options: {
+          A: "Traffic Analysis (Analisis Lalu Lintas Pesan)",
+          B: "Eavesdropping (Penyadapan Pesan Tanpa Mengubah Isinya)",
+          C: "Modification of Messages / Data Tampering (Pengubahan Isi Pesan)",
+          D: "Passive Wiretapping (Pemantauan Jalur Komunikasi secara Pasif)"
+        },
+        correct: "C",
+        reference: "Modification of Messages / Data Tampering bersifat aktif karena penyerang mengubah isi pesan yang dikirimkan."
+      },
+      {
+        text: "Mengamankan pesan pada aplikasi Web berdasarkan posisinya pada lapisan TCP/IP dapat dilakukan di berbagai level. Tiga metode/posisi penerapan keamanan tersebut adalah...",
+        options: {
+          A: "Application-level, Transport-level, Network-level (IP-level)",
+          B: "Physical-level, Link-level, Network-level",
+          C: "Session-level, Presentation-level, Transport-level",
+          D: "Hardware-level, Software-level, User-level"
+        },
+        correct: "A",
+        reference: "Keamanan pada aplikasi Web dapat diterapkan pada level Application, Transport, maupun Network (IP-level)."
+      },
+      {
+        text: "Manakah dari algoritma berikut yang merupakan contoh algoritma enkripsi simetris yang umum digunakan pada protokol TLS untuk mengamankan data?",
+        options: { A: "SHA-256", B: "AES (Advanced Encryption Standard)", C: "MD5", D: "HMAC" },
+        correct: "B",
+        reference: "AES adalah algoritma enkripsi simetris yang umum digunakan pada TLS untuk mengamankan data, sedangkan SHA-256, MD5, dan HMAC berkaitan dengan fungsi hash/integritas."
+      },
+      {
+        text: "Manakah dari pilihan berikut yang merupakan contoh fungsi/algoritma hash yang digunakan pada protokol TLS untuk menjaga integritas data?",
+        options: { A: "AES-GCM", B: "RSA", C: "SHA-256", D: "ECC" },
+        correct: "C",
+        reference: "SHA-256 adalah fungsi hash yang digunakan TLS untuk menjaga integritas data, berbeda dengan AES-GCM (enkripsi), RSA dan ECC (kriptografi kunci publik)."
+      },
+      {
+        text: "Salah satu algoritma enkripsi yang dapat digunakan pada protokol SSH untuk mengamankan komunikasi remote shell adalah...",
+        options: { A: "AES (Advanced Encryption Standard)", B: "SHA-512", C: "MD5", D: "Diffie-Hellman" },
+        correct: "A",
+        reference: "AES digunakan sebagai algoritma enkripsi pada SSH untuk mengamankan komunikasi remote shell."
+      },
+      {
+        text: "Salah satu contoh algoritma hash / Message Authentication Code (MAC) yang dapat digunakan pada protokol SSH adalah...",
+        options: { A: "ChaCha20", B: "HMAC-SHA2-256", C: "RSA-4096", D: "Blowfish" },
+        correct: "B",
+        reference: "HMAC-SHA2-256 adalah contoh algoritma MAC yang digunakan pada SSH untuk menjaga integritas dan otentikasi pesan."
+      }
+    ];
+
+    /* ================= STATE ================= */
+    let state = {
+      name: "",
+      nim: "",
+      current: 0,
+      startTime: null,
+      endTime: null,
+      finished: false,
+      pdfDownloaded: false,
+      answers: QUESTIONS.map(() => null) // huruf jawaban terpilih A/B/C/D atau null
+    };
+    let timerId = null;
+
+    /* ================= DOM REFS ================= */
+    const screenGate = document.getElementById('screen-gate');
+    const screenQuiz = document.getElementById('screen-quiz');
+    const screenResults = document.getElementById('screen-results');
+
+    const inputName = document.getElementById('input-name');
+    const inputNim = document.getElementById('input-nim');
+    const btnStart = document.getElementById('btn-start');
+
+    const progressTrack = document.getElementById('progress-track');
+    const progressCurrent = document.getElementById('progress-current');
+    const progressTotal = document.getElementById('progress-total');
+    const progressAnsweredLabel = document.getElementById('progress-answered-label');
+    const timerBlock = document.getElementById('timer-block');
+    const timerValue = document.getElementById('timer-value');
+
+    const qBadge = document.getElementById('q-badge');
+    const qIndexLabel = document.getElementById('q-index-label');
+    const qText = document.getElementById('q-text');
+    const optionList = document.getElementById('option-list');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnFinish = document.getElementById('btn-finish');
+    const jumpRow = document.getElementById('jump-row');
+
+    const modalConfirm = document.getElementById('modal-confirm');
+    const modalConfirmText = document.getElementById('modal-confirm-text');
+    const modalCancel = document.getElementById('modal-cancel');
+    const modalConfirmYes = document.getElementById('modal-confirm-yes');
+    const modalTimeup = document.getElementById('modal-timeup');
+    const modalTimeupOk = document.getElementById('modal-timeup-ok');
+
+    /* ================= HELPERS ================= */
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str == null ? "" : String(str);
+      return div.innerHTML;
+    }
+
+    function formatClock(totalSeconds) {
+      const s = Math.max(0, totalSeconds);
+      const m = Math.floor(s / 60);
+      const sec = s % 60;
+      return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+
+    function answeredCount() {
+      return state.answers.filter(a => a !== null).length;
+    }
+
+    /* ================= PROGRESS TRACK ================= */
+    function renderProgressTrack() {
+      progressTrack.innerHTML = '';
+      QUESTIONS.forEach((_, idx) => {
+        const seg = document.createElement('div');
+        seg.className = 'progress-seg';
+        if (state.answers[idx] !== null) seg.classList.add('done');
+        if (idx === state.current) seg.classList.add('current');
+        progressTrack.appendChild(seg);
+      });
+      progressCurrent.textContent = state.current + 1;
+      progressTotal.textContent = QUESTIONS.length;
+      progressAnsweredLabel.textContent = answeredCount() + ' terjawab';
+    }
+
+    function renderJumpRow() {
+      jumpRow.innerHTML = '';
+      QUESTIONS.forEach((_, idx) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'jump-dot';
+        if (state.answers[idx] !== null) dot.classList.add('done');
+        if (idx === state.current) dot.classList.add('current');
+        dot.textContent = idx + 1;
+        dot.disabled = state.finished;
+        dot.addEventListener('click', () => { state.current = idx; renderQuestion(); });
+        jumpRow.appendChild(dot);
+      });
+    }
+
+    /* ================= QUESTION RENDER ================= */
+    function renderQuestion() {
+      const idx = state.current;
+      const q = QUESTIONS[idx];
+      qBadge.textContent = idx + 1;
+      qIndexLabel.textContent = 'SOAL ' + (idx + 1) + ' DARI ' + QUESTIONS.length;
+      qText.textContent = q.text;
+
+      optionList.innerHTML = '';
+      ['A', 'B', 'C', 'D'].forEach(letter => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'option-btn';
+        btn.disabled = state.finished;
+        if (state.answers[idx] === letter) btn.classList.add('selected');
+        btn.innerHTML = '<span class="option-letter">' + letter + '</span><span>' + escapeHtml(q.options[letter]) + '</span>';
+        btn.addEventListener('click', () => {
+          if (state.finished) return;
+          state.answers[idx] = letter;
+          renderQuestion();
+          renderProgressTrack();
+          renderJumpRow();
+        });
+        optionList.appendChild(btn);
+      });
+
+      btnPrev.disabled = idx === 0;
+      const isLast = idx === QUESTIONS.length - 1;
+      btnNext.classList.toggle('hidden', isLast);
+      btnFinish.classList.toggle('hidden', !isLast);
+
+      renderProgressTrack();
+      renderJumpRow();
+    }
+
+    /* ================= NAVIGATION ================= */
+    btnPrev.addEventListener('click', () => {
+      if (state.current > 0) { state.current--; renderQuestion(); }
+    });
+    btnNext.addEventListener('click', () => {
+      if (state.current < QUESTIONS.length - 1) { state.current++; renderQuestion(); }
+    });
+
+    /* ================= START QUIZ ================= */
+    btnStart.addEventListener('click', () => {
+      const name = inputName.value.trim();
+      const nim = inputNim.value.trim();
+      let ok = true;
+      if (!name) { inputName.classList.add('err'); ok = false; } else inputName.classList.remove('err');
+      if (!nim) { inputNim.classList.add('err'); ok = false; } else inputNim.classList.remove('err');
+      if (!ok) return;
+
+      state.name = name;
+      state.nim = nim;
+      state.startTime = Date.now();
+      state.endTime = state.startTime + QUIZ_DURATION_SECONDS * 1000;
+
+      screenGate.classList.add('hidden');
+      screenQuiz.classList.remove('hidden');
+      renderQuestion();
+      startTimer();
+    });
+
+    /* ================= TIMER ================= */
+    function startTimer() {
+      updateTimerDisplay();
+      timerId = setInterval(() => {
+        updateTimerDisplay();
+        const remaining = Math.round((state.endTime - Date.now()) / 1000);
+        if (remaining <= 0) {
+          clearInterval(timerId);
+          timerId = null;
+          if (!state.finished) {
+            modalTimeup.classList.add('open');
+          }
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const remaining = Math.round((state.endTime - Date.now()) / 1000);
+      timerValue.textContent = formatClock(remaining);
+      timerBlock.classList.remove('warning', 'expired');
+      if (remaining <= 0) {
+        timerValue.textContent = '00:00';
+        timerBlock.classList.add('expired');
+      } else if (remaining <= 60) {
+        timerBlock.classList.add('warning');
+      }
+    }
+
+    modalTimeupOk.addEventListener('click', () => {
+      modalTimeup.classList.remove('open');
+      finishQuiz(true);
+    });
+
+    /* ================= CONFIRM & FINISH ================= */
+    btnFinish.addEventListener('click', () => {
+      const count = answeredCount();
+      modalConfirmText.innerHTML = 'Anda telah menjawab <b>' + count + ' dari ' + QUESTIONS.length + '</b> soal. Jawaban tidak dapat diubah setelah dikumpulkan. Yakin ingin melanjutkan?';
+      modalConfirm.classList.add('open');
+    });
+    modalCancel.addEventListener('click', () => modalConfirm.classList.remove('open'));
+    modalConfirmYes.addEventListener('click', () => {
+      modalConfirm.classList.remove('open');
+      finishQuiz(false);
+    });
+
+    function computeScore() {
+      let correctCount = 0;
+      QUESTIONS.forEach((q, idx) => {
+        if (state.answers[idx] === q.correct) correctCount++;
+      });
+      return { correctCount, wrongCount: QUESTIONS.length - correctCount, score: correctCount * POINTS_PER_QUESTION };
+    }
+
+    function finishQuiz(byTimeout) {
+      if (state.finished) return;
+      state.finished = true;
+      if (timerId) { clearInterval(timerId); timerId = null; }
+      if (!state.endTime || byTimeout) {
+        // keep original endTime for record; nothing else to change
+      }
+
+      screenQuiz.classList.add('hidden');
+      renderResults();
+      screenResults.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Trigger PDF generation + auto download + auto upload
+      setTimeout(() => { downloadAnswerPdf(false); }, 400);
+    }
+
+    /* ================= RESULTS RENDER ================= */
+    function renderResults() {
+      const { correctCount, wrongCount, score } = computeScore();
+
+      document.getElementById('results-score').innerHTML = score + '<span>/100</span>';
+      document.getElementById('results-name').textContent = state.name + ' · NIM ' + state.nim;
+      document.getElementById('stat-correct').textContent = correctCount + ' benar';
+      document.getElementById('stat-wrong').textContent = wrongCount + ' salah';
+      document.getElementById('submission-status').textContent = 'Menyiapkan PDF dan mengirim ke Google Drive...';
+
+      const reviewBlock = document.getElementById('review-block');
+      reviewBlock.innerHTML = '';
+      QUESTIONS.forEach((q, idx) => {
+        const userAns = state.answers[idx];
+        const isCorrect = userAns === q.correct;
+
+        const item = document.createElement('div');
+        item.className = 'review-item';
+
+        let optionsHtml = '';
+        ['A', 'B', 'C', 'D'].forEach(letter => {
+          let cls = 'option-btn';
+          if (letter === q.correct) cls += ' review-correct';
+          else if (letter === userAns && !isCorrect) cls += ' review-wrong';
+          optionsHtml += '<button type="button" class="' + cls + '" disabled><span class="option-letter">' + letter + '</span><span>' + escapeHtml(q.options[letter]) + '</span></button>';
+        });
+
+        item.innerHTML =
+          '<div class="q-index">SOAL ' + (idx + 1) + ' <span class="verdict-chip ' + (isCorrect ? 'correct' : 'wrong') + '">' + (isCorrect ? 'Benar (+10)' : 'Salah (0)') + '</span></div>' +
+          '<div class="q-text" style="font-size:15.5px;margin-bottom:14px;">' + escapeHtml(q.text) + '</div>' +
+          '<div class="option-list">' + optionsHtml + '</div>' +
+          '<div class="ref-box"><b>Jawaban yang benar: ' + q.correct + '.</b> ' + escapeHtml(q.reference) +
+          (userAns ? '' : ' <i>(Tidak dijawab)</i>') + '</div>';
+
+        reviewBlock.appendChild(item);
+      });
+    }
+
+    /* ================= PDF GENERATION ================= */
+    function buildPdfHtml() {
+      const { correctCount, wrongCount, score } = computeScore();
+      let rows = '';
+      QUESTIONS.forEach((q, idx) => {
+        const userAns = state.answers[idx];
+        const isCorrect = userAns === q.correct;
+        rows += '<div style="margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #e2e8f0;">' +
+          '<div style="font-family:JetBrains Mono, monospace;font-size:11px;color:#475569;margin-bottom:4px;">SOAL ' + (idx + 1) + ' — ' + (isCorrect ? 'BENAR (+10)' : 'SALAH (0)') + '</div>' +
+          '<div style="font-weight:600;font-size:13.5px;color:#0d2b55;margin-bottom:6px;">' + escapeHtml(q.text) + '</div>' +
+          '<div style="font-size:12.5px;color:#1e293b;margin-bottom:4px;">Jawaban dipilih: <b>' + (userAns ? userAns + '. ' + escapeHtml(q.options[userAns]) : '(tidak dijawab)') + '</b></div>' +
+          '<div style="font-size:12.5px;color:#16a34a;">Jawaban benar: <b>' + q.correct + '. ' + escapeHtml(q.options[q.correct]) + '</b></div>' +
+          '</div>';
+      });
+
+      return '<div style="font-family: Inter, sans-serif; width: 720px; padding: 10px; color:#1e293b;">' +
+        '<div style="text-align:center;margin-bottom:18px;">' +
+        '<div style="font-size:11px;letter-spacing:1px;color:#2563eb;font-weight:700;">STIK6063 · KEAMANAN JARINGAN</div>' +
+        '<div style="font-size:18px;font-weight:800;color:#0d2b55;margin-top:4px;">Quiz 1 — Transport-Level Security</div>' +
+        '<div style="font-size:11.5px;color:#475569;margin-top:2px;">Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom · Universitas Syiah Kuala</div>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:18px;font-size:13px;">' +
+        '<div><b>Nama:</b> ' + escapeHtml(state.name) + '<br/><b>NIM:</b> ' + escapeHtml(state.nim) + '</div>' +
+        '<div style="text-align:right;"><b>Skor Akhir:</b> ' + score + ' / 100<br/><b>Benar/Salah:</b> ' + correctCount + ' / ' + wrongCount + '</div>' +
+        '</div>' +
+        rows +
+        '<div style="text-align:center;font-size:10px;color:#94a3b8;margin-top:10px;">Dihasilkan otomatis oleh sistem kuis interaktif · ' + new Date().toLocaleString('id-ID') + '</div>' +
+        '</div>';
+    }
+
+    function downloadAnswerPdf(manualTrigger) {
+      if (!window.jspdf || !window.html2canvas) {
+        document.getElementById('submission-status').textContent = 'Gagal memuat pustaka PDF. Periksa koneksi internet, lalu coba tombol Unduh PDF.';
+        return false;
+      }
+      const { jsPDF } = window.jspdf;
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-10000px';
+      container.style.top = '0';
+      container.innerHTML = buildPdfHtml();
+      document.body.appendChild(container);
+
+      const doc = new jsPDF('p', 'pt', 'a4');
+      doc.html(container, {
+        x: 20,
+        y: 20,
+        width: 555,
+        windowWidth: 760,
+        callback: function (finalDoc) {
+          document.body.removeChild(container);
+          const filename = 'Quiz1_TLS_' + state.name.replace(/\s+/g, '_') + '_' + state.nim + '.pdf';
+          if (!state.pdfDownloaded) {
+            finalDoc.save(filename);
+            state.pdfDownloaded = true;
+          }
+          sendPdfToDrive(finalDoc, filename);
+        }
+      });
+      return true;
+    }
+
+    /* ================= GOOGLE DRIVE UPLOAD ================= */
+    function sendPdfToDrive(pdfDoc, filename) {
+      const statusEl = document.getElementById('submission-status');
+      try {
+        const dataUri = pdfDoc.output('datauristring');
+        const base64 = dataUri.split(',')[1];
+
+        const payload = JSON.stringify({
+          filename: filename,
+          folderId: DRIVE_FOLDER_ID,
+          mimeType: 'application/pdf',
+          base64: base64,
+          name: state.name,
+          nim: state.nim,
+          score: computeScore().score
+        });
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', GOOGLE_SCRIPT_URL, true);
+        xhr.setRequestHeader('Content-Type', 'text/plain;charset=utf-8');
+        xhr.timeout = 30000;
+        xhr.onload = function () {
+          if (statusEl) {
+            statusEl.textContent = 'PDF jawaban telah diunduh dan terkirim otomatis ke Google Drive. Simpan atau kumpulkan file tersebut sesuai arahan dosen.';
+          }
+        };
+        xhr.onerror = function () {
+          if (statusEl) {
+            statusEl.textContent = 'PDF telah diunduh, namun pengiriman otomatis ke Google Drive gagal. Silakan kirim file PDF secara manual ke dosen.';
+          }
+        };
+        xhr.ontimeout = xhr.onerror;
+        xhr.send(payload);
+      } catch (err) {
+        if (statusEl) {
+          statusEl.textContent = 'PDF telah diunduh, namun pengiriman otomatis ke Google Drive gagal. Silakan kirim file PDF secara manual ke dosen.';
+        }
+      }
+    }
+
+    /* ================= PRINT / MANUAL DOWNLOAD ================= */
+    document.getElementById('btn-download-pdf').addEventListener('click', () => {
+      state.pdfDownloaded = false;
+      const ok = downloadAnswerPdf(true);
+      if (!ok) document.getElementById('submission-status').textContent = 'PDF belum dapat dibuat. Periksa koneksi internet, lalu coba lagi.';
+    });
+    document.getElementById('btn-print').addEventListener('click', () => window.print());
+
+  })();
+  </script>
+</body>
+
+</html>
