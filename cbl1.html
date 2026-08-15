@@ -1,0 +1,2896 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CBL-1 | Penerapan dan Analisis Transport-Level Security — Penyusun Laporan | STIK6063</title>
+  <meta name="description"
+    content="Penyusun laporan praktikum CBL-1: Penerapan dan Analisis Transport-Level Security (TLS 1.2, TLS 1.3, SSHv2, SSH Tunneling, dan TLS 1.3 pada Apache) — STIK6063 Keamanan Jaringan." />
+
+  <!-- jsPDF + jsPDF-AutoTable (vector-native PDF generation) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <style>
+    :root {
+      --navy: #0d2b55;
+      --navy-dark: #081a38;
+      --navy-mid: #163d73;
+      --accent: #2563eb;
+      --accent-light: #3b82f6;
+      --gold: #f59e0b;
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --gray-800: #1e293b;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+      --radius: 10px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, .12);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, .12);
+      --shadow-lg: 0 8px 30px rgba(0, 0, 0, .18);
+      --transition: all .2s ease;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--gray-100);
+      color: var(--gray-800);
+      line-height: 1.6;
+      font-size: 14px;
+      padding-bottom: 60px;
+    }
+
+    /* HEADER SESUAI GAMBAR REFERENSI */
+    header {
+      background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-mid) 60%, var(--accent) 100%);
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .header-inner {
+      position: relative;
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 28px 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 48px;
+    }
+
+    .header-logo {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-height: 110px;
+      width: auto;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      outline: none;
+      padding: 0;
+    }
+
+    .header-logo-img {
+      max-height: 105px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.25));
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      flex: 1 1 auto;
+      text-align: left;
+    }
+
+    .header-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -.3px;
+      line-height: 1.3;
+      color: #ffffff;
+    }
+
+    .header-text .subtitle {
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, .78);
+      margin-top: 4px;
+      line-height: 1.45;
+    }
+
+    .header-badge {
+      margin-left: auto;
+      background: var(--gold, #f59e0b);
+      color: var(--navy-dark, #081a38);
+      font-weight: 700;
+      font-size: 11px;
+      padding: 8px 18px;
+      border-radius: 24px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 900px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 16px;
+      }
+
+      .header-text {
+        align-items: center;
+        text-align: center;
+      }
+
+      .header-logo-img {
+        max-height: 85px;
+      }
+
+      .header-badge {
+        margin-left: 0;
+      }
+    }
+
+    .sticky-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 0;
+    }
+
+    .sticky-toolbar-inner {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .prog-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .prog-bar-outer {
+      flex: 1;
+      height: 8px;
+      background: var(--gray-200);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .prog-bar-inner {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .prog-text {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    .save-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: var(--gray-600);
+    }
+
+    .save-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-success {
+      background: var(--green);
+      color: #fff;
+    }
+    .btn-success:hover {
+      background: #15803d;
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-800);
+      border-color: var(--gray-300);
+    }
+    .btn-secondary:hover {
+      background: var(--gray-200);
+    }
+
+    .btn-danger {
+      background: var(--red-light);
+      color: var(--red);
+      border-color: #fca5a5;
+    }
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+    }
+
+    main {
+      max-width: 1250px;
+      margin: 24px auto 0;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* Form Fields */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-600);
+    }
+
+    .form-control {
+      padding: 9px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--gray-300);
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: #fff;
+      color: var(--gray-800);
+      transition: var(--transition);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .form-control[readonly] {
+      background: var(--gray-100);
+      color: var(--gray-600);
+      cursor: not-allowed;
+    }
+
+    /* Members table/grid matching Image 2 */
+    .member-grid-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .member-row-flex {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .member-row-flex .idx {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-600);
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .member-row-flex input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-family: inherit;
+      transition: var(--transition);
+      background-color: #fff;
+    }
+
+    .member-row-flex input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Checklist Box */
+    .checklist-card {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+
+    .checklist-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0369a1;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .checklist-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #0c4a6e;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .checklist-item:hover {
+      text-decoration: underline;
+    }
+
+    .checklist-icon {
+      font-size: 0.95rem;
+    }
+
+    /* Step Item & Instructions */
+    .step-box {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .step-number {
+      background: var(--navy-mid);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+      margin-top: 2px;
+    }
+
+    .step-instruction {
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--gray-800);
+      flex: 1;
+      line-height: 1.5;
+    }
+
+    /* Reference / Example preview toggle */
+    .example-preview-toggle {
+      background: #f8fafc;
+      border: 1px dashed var(--gray-300);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin: 10px 0 14px;
+      font-size: 0.78rem;
+      color: var(--gray-600);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .example-preview-toggle:hover {
+      background: #f1f5f9;
+      border-color: var(--accent-light);
+      color: var(--navy-mid);
+    }
+
+    .example-preview-content {
+      display: none;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid var(--gray-200);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .example-preview-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+      border: 1px solid var(--gray-300);
+      box-shadow: var(--shadow-sm);
+      cursor: zoom-in;
+    }
+
+    .example-preview-caption {
+      font-size: 0.72rem;
+      color: var(--gray-400);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed var(--gray-300);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      background: var(--gray-50);
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: #eff6ff;
+    }
+
+    .dropzone-icon {
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .dropzone-text {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+    }
+
+    .dropzone-subtext {
+      font-size: 0.72rem;
+      color: var(--gray-400);
+      margin-top: 2px;
+    }
+
+    .dropzone-thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .thumb-item {
+      position: relative;
+      width: 100px;
+      height: 70px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--gray-300);
+      background: #000;
+    }
+
+    .thumb-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      cursor: zoom-in;
+    }
+
+    .thumb-del {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      background: rgba(220, 38, 38, 0.85);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* Parameter grid */
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+      background: var(--gray-50);
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .param-title {
+      grid-column: 1 / -1;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gray-200);
+      padding-bottom: 6px;
+      margin-bottom: 4px;
+    }
+
+    .param-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .param-group label {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      font-family: var(--font-mono);
+    }
+
+    .param-input {
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: 1px solid var(--gray-300);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      background: #fff;
+      color: var(--gray-800);
+    }
+
+    .param-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Analysis Box */
+    .analysis-container {
+      margin-top: 12px;
+    }
+
+    .analysis-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--gray-300);
+      font-size: 0.85rem;
+      font-family: inherit;
+      line-height: 1.6;
+      background: #fff;
+      color: var(--gray-800);
+      resize: vertical;
+    }
+
+    .analysis-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    /* Image zoom modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      position: relative;
+    }
+
+    .modal-content img {
+      max-width: 100%;
+      max-height: 85vh;
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -36px;
+      right: 0;
+      background: transparent;
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    footer {
+      max-width: 1250px;
+      margin: 40px auto 0;
+      padding: 20px;
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--gray-200);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="header-logo" title="Universitas Syiah Kuala">
+        <img src="logo_usk.png" alt="Logo USK" class="header-logo-img" />
+      </div>
+      <div class="header-text">
+        <h1>Departemen Teknik Elektro dan Komputer <br>LABORATORIUM JARINGAN KOMPUTER
+          <br>STIK6063-CBL-1: Penerapan dan Analisis Transport-Level Security
+        </h1>
+        <div class="subtitle">Penyusun Laporan : STIK6063 Keamanan Jaringan
+          <br>Designed by: yuliar@usk.ac.id & sarah.arrayyan@usk.ac.id
+        </div>
+      </div>
+      <div class="header-badge">PENYUSUN LAPORAN : STIK6063 KEAMANAN JARINGAN</div>
+    </div>
+  </header>
+
+  <div class="sticky-toolbar no-print">
+    <div class="sticky-toolbar-inner">
+      <div class="prog-wrap">
+        <span class="prog-text" id="prog-label">Progress: 0%</span>
+        <div class="prog-bar-outer">
+          <div class="prog-bar-inner" id="prog-bar"></div>
+        </div>
+      </div>
+      <div class="save-indicator">
+        <span class="save-dot" id="save-dot"></span>
+        <span id="save-status">Tersimpan otomatis</span>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="resetAll()">🔄 Reset</button>
+        <button class="btn btn-primary" onclick="generatePDF()">📥 Unduh PDF Laporan</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- Progress Checklist Card -->
+    <div class="checklist-card">
+      <div class="checklist-title">
+        <span>📋</span> Status Kelengkapan Laporan CBL-1
+      </div>
+      <div class="checklist-items">
+        <a href="#card-identitas" class="checklist-item" id="chk-identitas">
+          <span class="checklist-icon">⚪</span> Identitas Kelompok
+        </a>
+        <a href="#card-sec1" class="checklist-item" id="chk-sec1">
+          <span class="checklist-icon">⚪</span> 1. TLS v1.2 (ami.usk.ac.id)
+        </a>
+        <a href="#card-sec2" class="checklist-item" id="chk-sec2">
+          <span class="checklist-icon">⚪</span> 2. TLS v1.3 (komputer.ft.usk.ac.id)
+        </a>
+        <a href="#card-sec3" class="checklist-item" id="chk-sec3">
+          <span class="checklist-icon">⚪</span> 3. SSHv2 (Ubuntu & Windows)
+        </a>
+        <a href="#card-sec4" class="checklist-item" id="chk-sec4">
+          <span class="checklist-icon">⚪</span> 4. SSH Tunneling (HTTP)
+        </a>
+        <a href="#card-sec5" class="checklist-item" id="chk-sec5">
+          <span class="checklist-icon">⚪</span> 5. TLS v1.3 Web Server Apache
+        </a>
+      </div>
+    </div>
+
+    <!-- Identitas Kelompok -->
+    <div class="card" id="card-identitas">
+      <div class="card-header">
+        <h2>👥 Identitas Kelompok &amp; Mahasiswa</h2>
+        <span style="font-size:0.75rem; color:var(--gray-600);">Auto-fill nama berdasarkan NPM dari database</span>
+      </div>
+      <div class="card-body">
+        <div class="form-grid" style="margin-bottom: 18px;">
+          <div class="form-group">
+            <label for="kelompok">Nomor Kelompok (Contoh: 1, 2, ...)</label>
+            <input type="text" id="kelompok" class="form-control" placeholder="1" />
+          </div>
+          <div class="form-group">
+            <label for="kelas">Kelas</label>
+            <input type="text" id="kelas" class="form-control" value="Kelas 11" readonly style="background-color: var(--gray-100); cursor: not-allowed;" />
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="dosen">Dosen Pengampu</label>
+            <input type="text" id="dosen" class="form-control" value="Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom" readonly style="background-color: var(--gray-100); cursor: not-allowed;" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="font-size:0.85rem; font-weight:700; color:var(--navy); margin-bottom: 8px;">NPM &amp; Nama Anggota Kelompok</label>
+          <div class="member-grid-wrap" id="memberList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATALIST SARAN REKOMENDASI NIM MAHASISWA -->
+    <datalist id="studentQuizList">
+      <option value="2304111010031">2304111010031 - NABIL MUHAMMAD TSADZALI</option>
+      <option value="2404111010016">2404111010016 - ZAKI ALKAF</option>
+      <option value="2404111010019">2404111010019 - KHALIDA</option>
+      <option value="2404111010060">2404111010060 - Aulia Akbar</option>
+      <option value="2404111010066">2404111010066 - Hafidh Alfarisi</option>
+      <option value="2404111010075">2404111010075 - CAESAR RAHMAWAN</option>
+      <option value="2404111010102">2404111010102 - MUTHMAINNAH</option>
+      <option value="2104111010093">2104111010093 - Sarah Ar Rayyan (admin / asdos)</option>
+    </datalist>
+
+    <!-- BAGIAN 1: TLS 1.2 -->
+    <div class="card" id="card-sec1">
+      <div class="card-header">
+        <h2>🔒 1. Transport Layer Security (TLS) Versi 1.2</h2>
+        <span class="header-badge" style="background:var(--navy-mid); color:#fff; font-size:11px; padding:4px 12px;">Web Server: ami.usk.ac.id</span>
+      </div>
+      <div class="card-body">
+        <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:12px;">1.1 Penerapan protokol TLS versi 1.2 pada web server ami.usk.ac.id</h3>
+        
+        <!-- Step 1 & 2 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 1 & 2</span>
+            <div class="step-instruction">
+              Konekkan host Windows dengan HotSpot Wi-Fi agar bisa mengakses Internet. Jalankan browser di host Windows dan buka website <code>https://ami.usk.ac.id</code>. Capture/crop hasilnya dan upload di bawah ini:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-2')">
+            <span>📷 Lihat Contoh Modul (ami.usk.ac.id)</span>
+            <span id="ex-1-2-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-2">
+            <img src="media/image2.png" alt="Contoh Website ami.usk.ac.id" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.2 Halaman Website ami.usk.ac.id</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_step2" data-field="sec1_step2">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Website ami.usk.ac.id</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_step2"></div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 3</span>
+            <div class="step-instruction">
+              Setelah halaman website AMI-USK terbuka, tekan tombol <strong>F12</strong> di keyboard host Windows hingga terbuka menu <strong>Developer tool</strong>. Kemudian pilih tab <strong>Network</strong>. Capture/crop hasilnya dan upload di bawah ini:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-3')">
+            <span>📷 Lihat Contoh Modul (Developer Tool Network)</span>
+            <span id="ex-1-3-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-3">
+            <img src="media/image3.png" alt="Contoh Developer Tool Network" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.3 Menu Network Developer Tool</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_step3" data-field="sec1_step3">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Tab Network Developer Tool</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_step3"></div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 4</span>
+            <div class="step-instruction">
+              Pada web browser, tekan tombol reload (F5) sehingga object-object yang dikirimkan oleh web server AMI-USK terlihat. Klik pada salah satu object sehingga terbuka <strong>detail header</strong> dari object tersebut (perhatikan Remote Address & Protocol). Capture/crop hasilnya:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-4')">
+            <span>📷 Lihat Contoh Modul (Detail Header & Remote Address)</span>
+            <span id="ex-1-4-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-4">
+            <img src="media/image4.png" alt="Contoh Detail Header Object" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.4 Detail Header Object</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_step4" data-field="sec1_step4">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Detail Header Object</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_step4"></div>
+          </div>
+        </div>
+
+        <!-- Step 5 & 6 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 5 & 6</span>
+            <div class="step-instruction">
+              Jalankan Wireshark di Windows pada interface Wi-Fi. Aktifkan filter <code>ip.addr == [remote_address]</code> berdasarkan remote address langkah 4. Reload website AMI-USK sehingga Wireshark menampilkan seluruh trafik TLS. Capture/crop hasilnya:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-6')">
+            <span>📷 Lihat Contoh Modul (Wireshark Trafik ami.usk.ac.id)</span>
+            <span id="ex-1-6-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-6">
+            <img src="media/image5.png" alt="Contoh Wireshark Trafik ami.usk.ac.id" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.5 Trafik Wireshark ami.usk.ac.id</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_step6" data-field="sec1_step6">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Wireshark Trafik TLS ami.usk.ac.id</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_step6"></div>
+          </div>
+        </div>
+
+        <!-- Step 7: Client Hello -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 7</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Client Hello</strong> dan perlihatkan detil informasi parameternya. Capture/crop hasilnya dan isi parameter di bawah ini:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-7')">
+            <span>📷 Lihat Contoh Modul (Paket Client Hello TLS 1.2)</span>
+            <span id="ex-1-7-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-7">
+            <img src="media/image6.png" alt="Contoh Paket Client Hello" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.6 Paket Client Hello TLS 1.2</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_client_hello_img" data-field="sec1_client_hello_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Paket Client Hello TLS 1.2</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_client_hello_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Parameter Client Hello (TLS 1.2)</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec1_ch')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type :</label>
+              <input type="text" class="param-input" id="sec1_ch_type" placeholder="Contoh: Client Hello (1)" />
+            </div>
+            <div class="param-group">
+              <label>Length :</label>
+              <input type="text" class="param-input" id="sec1_ch_len" placeholder="Contoh: 512" />
+            </div>
+            <div class="param-group">
+              <label>Version :</label>
+              <input type="text" class="param-input" id="sec1_ch_ver" placeholder="Contoh: TLS 1.2 (0x0303)" />
+            </div>
+            <div class="param-group">
+              <label>Random -> gmt_unix_time :</label>
+              <input type="text" class="param-input" id="sec1_ch_time" placeholder="Contoh: Aug 15, 2025 ..." />
+            </div>
+            <div class="param-group">
+              <label>Random -> random_bytes :</label>
+              <input type="text" class="param-input" id="sec1_ch_rnd" placeholder="Nilai byte random (hex)" />
+            </div>
+            <div class="param-group">
+              <label>Session ID Length & Session ID :</label>
+              <input type="text" class="param-input" id="sec1_ch_sess" placeholder="Panjang dan Session ID" />
+            </div>
+            <div class="param-group">
+              <label>Cipher Suites Length :</label>
+              <input type="text" class="param-input" id="sec1_ch_cslen" placeholder="Contoh: 34" />
+            </div>
+            <div class="param-group" style="grid-column: 1 / -1;">
+              <label>Cipher Suites (Sebutkan 3) :</label>
+              <input type="text" class="param-input" id="sec1_ch_cs3" placeholder="1. TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, 2. ..., 3. ..." />
+            </div>
+            <div class="param-group">
+              <label>Extension: server_name :</label>
+              <input type="text" class="param-input" id="sec1_ch_ext_sni" placeholder="ami.usk.ac.id" />
+            </div>
+            <div class="param-group">
+              <label>Extension: elliptic_curves :</label>
+              <input type="text" class="param-input" id="sec1_ch_ext_ec" placeholder="x25519, secp256r1, ..." />
+            </div>
+            <div class="param-group">
+              <label>Extension: ec_point_formats :</label>
+              <input type="text" class="param-input" id="sec1_ch_ext_ecfmt" placeholder="uncompressed (0)" />
+            </div>
+            <div class="param-group">
+              <label>Extension: signature_algorithms :</label>
+              <input type="text" class="param-input" id="sec1_ch_ext_sig" placeholder="rsa_pss_rsae_sha256, ecdsa_secp256r1_sha256, ..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 8: Server Hello -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 8</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Server Hello</strong> dan perlihatkan detil informasi parameternya. Capture/crop hasilnya dan isi parameter di bawah ini:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-8')">
+            <span>📷 Lihat Contoh Modul (Paket Server Hello TLS 1.2)</span>
+            <span id="ex-1-8-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-8">
+            <img src="media/image7.png" alt="Contoh Server Hello" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.7 Paket Server Hello TLS 1.2</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_server_hello_img" data-field="sec1_server_hello_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Paket Server Hello TLS 1.2</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_server_hello_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Parameter Server Hello (TLS 1.2)</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec1_sh')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type :</label>
+              <input type="text" class="param-input" id="sec1_sh_type" placeholder="Server Hello (2)" />
+            </div>
+            <div class="param-group">
+              <label>Length :</label>
+              <input type="text" class="param-input" id="sec1_sh_len" placeholder="Contoh: 85" />
+            </div>
+            <div class="param-group">
+              <label>Version :</label>
+              <input type="text" class="param-input" id="sec1_sh_ver" placeholder="TLS 1.2 (0x0303)" />
+            </div>
+            <div class="param-group">
+              <label>Random -> gmt_unix_time :</label>
+              <input type="text" class="param-input" id="sec1_sh_time" placeholder="Waktu GMT server" />
+            </div>
+            <div class="param-group">
+              <label>Random -> random_bytes :</label>
+              <input type="text" class="param-input" id="sec1_sh_rnd" placeholder="Random bytes server (hex)" />
+            </div>
+            <div class="param-group">
+              <label>Session ID Length & Session ID :</label>
+              <input type="text" class="param-input" id="sec1_sh_sess" placeholder="Panjang & Session ID" />
+            </div>
+            <div class="param-group">
+              <label>Cipher Suite :</label>
+              <input type="text" class="param-input" id="sec1_sh_cs" placeholder="TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" />
+            </div>
+            <div class="param-group">
+              <label>Compression Method :</label>
+              <input type="text" class="param-input" id="sec1_sh_comp" placeholder="null (0)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 9: Certificate, Server Key Exchange, Server Hello Done -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 9</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Certificate, Server Key Exchange, Server Hello Done</strong> dan perlihatkan detil parameternya. Capture/crop hasilnya dan isi parameter:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-9')">
+            <span>📷 Lihat Contoh Modul (Certificate, Server Key Exchange, Server Hello Done)</span>
+            <span id="ex-1-9-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-9">
+            <img src="media/image8.png" alt="Contoh Certificate, Server Key Exchange" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.8 Paket Certificate, Server Key Exchange, Server Hello Done</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_cert_img" data-field="sec1_cert_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Certificate, Server Key Exchange, Server Hello Done</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_cert_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Parameter Certificate</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec1_cert')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type & Length :</label>
+              <input type="text" class="param-input" id="sec1_cert_type_len" placeholder="Certificate (11), Length: ..." />
+            </div>
+            <div class="param-group">
+              <label>Certificates Length :</label>
+              <input type="text" class="param-input" id="sec1_cert_len" placeholder="Panjang certificates" />
+            </div>
+            <div class="param-group">
+              <label>id-at-commonName :</label>
+              <input type="text" class="param-input" id="sec1_cert_cn" placeholder="ami.usk.ac.id" />
+            </div>
+            <div class="param-group">
+              <label>id-at-organizationName :</label>
+              <input type="text" class="param-input" id="sec1_cert_org" placeholder="Universitas Syiah Kuala" />
+            </div>
+            <div class="param-group">
+              <label>id-at-countryName :</label>
+              <input type="text" class="param-input" id="sec1_cert_country" placeholder="ID" />
+            </div>
+            <div class="param-group">
+              <label>id-ce-subjectAltName :</label>
+              <input type="text" class="param-input" id="sec1_cert_san" placeholder="DNS: ami.usk.ac.id, DNS: www.ami.usk.ac.id" />
+            </div>
+
+            <div class="param-title" style="margin-top:10px;">
+              <span>Parameter Server Key Exchange</span>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type & Length :</label>
+              <input type="text" class="param-input" id="sec1_ske_type_len" placeholder="Server Key Exchange (12), Length: ..." />
+            </div>
+            <div class="param-group">
+              <label>Curve Type & Named Curve :</label>
+              <input type="text" class="param-input" id="sec1_ske_curve" placeholder="named_curve (3), secp256r1 (0x0017) / x25519" />
+            </div>
+            <div class="param-group">
+              <label>Pubkey Length & Pubkey :</label>
+              <input type="text" class="param-input" id="sec1_ske_pubkey" placeholder="Panjang & Kunci publik server (hex)" />
+            </div>
+            <div class="param-group">
+              <label>Signature Algorithm & Length :</label>
+              <input type="text" class="param-input" id="sec1_ske_sig" placeholder="rsa_pss_rsae_sha256, Length: 256" />
+            </div>
+
+            <div class="param-title" style="margin-top:10px;">
+              <span>Parameter Server Hello Done</span>
+            </div>
+            <div class="param-group" style="grid-column: 1 / -1;">
+              <label>Handshake Type & Length :</label>
+              <input type="text" class="param-input" id="sec1_shd_info" placeholder="Server Hello Done (14), Length: 0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 10: Client Key Exchange, Change Cipher Spec, Encrypted Handshake -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 10</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message</strong> dan perlihatkan detil informasinya. Capture/crop hasilnya dan isi parameter:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-1-10')">
+            <span>📷 Lihat Contoh Modul (Client Key Exchange, Change Cipher Spec)</span>
+            <span id="ex-1-10-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-1-10">
+            <img src="media/image9.png" alt="Contoh Client Key Exchange, Change Cipher Spec" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 1.9 Client Key Exchange, Change Cipher Spec, Encrypted Handshake Message</div>
+          </div>
+          <div class="dropzone" id="dz-sec1_cke_img" data-field="sec1_cke_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Client Key Exchange, Change Cipher Spec, Encrypted Handshake</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec1_cke_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Parameter Client Key Exchange</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec1_cke')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type & Length :</label>
+              <input type="text" class="param-input" id="sec1_cke_type_len" placeholder="Client Key Exchange (16), Length: 33" />
+            </div>
+            <div class="param-group">
+              <label>EC Diffie-Hellman Client Pubkey :</label>
+              <input type="text" class="param-input" id="sec1_cke_pubkey" placeholder="Panjang & Kunci publik ephemeral client (hex)" />
+            </div>
+
+            <div class="param-title" style="margin-top:10px;">
+              <span>Parameter Change Cipher Spec & Encrypted Handshake</span>
+            </div>
+            <div class="param-group">
+              <label>Change Cipher Spec (Type, Ver, Len, Msg) :</label>
+              <input type="text" class="param-input" id="sec1_ccs_info" placeholder="Change Cipher Spec (20), TLS 1.2, Len: 1, Msg: 1" />
+            </div>
+            <div class="param-group">
+              <label>Encrypted Handshake Message (Type, Ver, Len) :</label>
+              <input type="text" class="param-input" id="sec1_ehm_info" placeholder="Handshake (22), TLS 1.2, Len: 40, Encrypted Message..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.2 Analisis TLS 1.2 -->
+        <div style="margin-top: 24px;">
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:8px;">1.2 Analisis penerapan protokol TLS versi 1.2 pada web server ami.usk.ac.id</h3>
+          <div class="analysis-container">
+            <div class="analysis-toolbar">
+              <span style="font-size:0.8rem; color:var(--gray-600);">Tuliskan analisis Anda terhadap penerapan protokol TLS versi 1.2 pada web server ami.usk.ac.id di bawah ini:</span>
+              <button class="btn btn-secondary btn-sm" onclick="copyAnalysis('sec1_analysis')">📋 Salin Teks</button>
+            </div>
+            <textarea id="sec1_analysis" class="analysis-textarea" placeholder="Tuliskan analisis penerapan protokol TLS versi 1.2 pada web server ami.usk.ac.id di sini..."></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BAGIAN 2: TLS 1.3 -->
+    <div class="card" id="card-sec2">
+      <div class="card-header">
+        <h2>🔒 2. Transport Layer Security (TLS) Versi 1.3</h2>
+        <span class="header-badge" style="background:var(--navy-mid); color:#fff; font-size:11px; padding:4px 12px;">Web Server: komputer.ft.usk.ac.id</span>
+      </div>
+      <div class="card-body">
+        <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:12px;">2.1 Penerapan protokol TLS versi 1.3 pada web server komputer.ft.usk.ac.id</h3>
+
+        <!-- Step 1 & 2 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 1 & 2</span>
+            <div class="step-instruction">
+              Konekkan host Windows dengan HotSpot Wi-Fi. Buka website <code>https://komputer.ft.usk.ac.id</code> pada browser host Windows. Capture/crop hasilnya:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-2-2')">
+            <span>📷 Lihat Contoh Modul (komputer.ft.usk.ac.id)</span>
+            <span id="ex-2-2-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-2-2">
+            <img src="media/image10.png" alt="Contoh Website komputer.ft.usk.ac.id" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 2.2 Halaman Website komputer.ft.usk.ac.id</div>
+          </div>
+          <div class="dropzone" id="dz-sec2_step2" data-field="sec2_step2">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Website komputer.ft.usk.ac.id</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec2_step2"></div>
+          </div>
+        </div>
+
+        <!-- Step 3 & 4 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 3 & 4</span>
+            <div class="step-instruction">
+              Buka Developer tool (F12) tab Network. Tekan reload (F5) dan klik salah satu object sehingga terbuka detail header (perhatikan Protocol: h2 / http/1.1 over TLS 1.3 & Remote Address). Capture/crop hasilnya:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-2-4')">
+            <span>📷 Lihat Contoh Modul (Network & Detail Header)</span>
+            <span id="ex-2-4-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-2-4">
+            <img src="media/image12.png" alt="Contoh Detail Header komputer.ft.usk.ac.id" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 2.4 Detail Header Object komputer.ft.usk.ac.id</div>
+          </div>
+          <div class="dropzone" id="dz-sec2_step4" data-field="sec2_step4">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Detail Header komputer.ft.usk.ac.id</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec2_step4"></div>
+          </div>
+        </div>
+
+        <!-- Step 5 & 6 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 5 & 6</span>
+            <div class="step-instruction">
+              Jalankan Wireshark di Windows pada interface Wi-Fi. Aktifkan filter <code>ip.addr == [remote_address]</code>. Reload website <code>komputer.ft.usk.ac.id</code> sehingga Wireshark menampilkan trafik TLS 1.3. Capture/crop hasilnya:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-2-6')">
+            <span>📷 Lihat Contoh Modul (Wireshark Trafik komputer.ft.usk.ac.id)</span>
+            <span id="ex-2-6-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-2-6">
+            <img src="media/image13.png" alt="Contoh Wireshark komputer.ft.usk.ac.id" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 2.5 Wireshark Trafik TLS 1.3 komputer.ft.usk.ac.id</div>
+          </div>
+          <div class="dropzone" id="dz-sec2_step6" data-field="sec2_step6">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Wireshark Trafik TLS 1.3</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec2_step6"></div>
+          </div>
+        </div>
+
+        <!-- Step 7: Client Hello TLS 1.3 -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 7</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Client Hello (TLS 1.3)</strong> dan perlihatkan detil informasinya (termasuk key_share & supported_versions). Capture/crop hasilnya dan isi parameter:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-2-7')">
+            <span>📷 Lihat Contoh Modul (Paket Client Hello TLS 1.3)</span>
+            <span id="ex-2-7-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-2-7">
+            <img src="media/image14.png" alt="Contoh Paket Client Hello TLS 1.3" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 2.6 Paket Client Hello TLS 1.3</div>
+          </div>
+          <div class="dropzone" id="dz-sec2_client_hello_img" data-field="sec2_client_hello_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Paket Client Hello TLS 1.3</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec2_client_hello_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Parameter Client Hello (TLS 1.3)</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec2_ch')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type :</label>
+              <input type="text" class="param-input" id="sec2_ch_type" placeholder="Client Hello (1)" />
+            </div>
+            <div class="param-group">
+              <label>Length & Version :</label>
+              <input type="text" class="param-input" id="sec2_ch_len_ver" placeholder="Length: 512, Version: TLS 1.2 (0x0303 - legacy)" />
+            </div>
+            <div class="param-group">
+              <label>Random -> gmt_unix_time & random_bytes :</label>
+              <input type="text" class="param-input" id="sec2_ch_rnd" placeholder="Random bytes client (hex)" />
+            </div>
+            <div class="param-group">
+              <label>Session ID Length & Session ID :</label>
+              <input type="text" class="param-input" id="sec2_ch_sess" placeholder="Panjang & Legacy Session ID" />
+            </div>
+            <div class="param-group">
+              <label>Cipher Suites Length :</label>
+              <input type="text" class="param-input" id="sec2_ch_cslen" placeholder="Contoh: 32" />
+            </div>
+            <div class="param-group" style="grid-column: 1 / -1;">
+              <label>Cipher Suites (Sebutkan 3) :</label>
+              <input type="text" class="param-input" id="sec2_ch_cs3" placeholder="1. TLS_AES_128_GCM_SHA256, 2. TLS_AES_256_GCM_SHA384, 3. TLS_CHACHA20_POLY1305_SHA256" />
+            </div>
+            <div class="param-group">
+              <label>Extension: server_name :</label>
+              <input type="text" class="param-input" id="sec2_ch_ext_sni" placeholder="komputer.ft.usk.ac.id" />
+            </div>
+            <div class="param-group">
+              <label>Extension: supported_groups :</label>
+              <input type="text" class="param-input" id="sec2_ch_ext_groups" placeholder="x25519, secp256r1, secp384r1" />
+            </div>
+            <div class="param-group">
+              <label>Extension: key_share :</label>
+              <input type="text" class="param-input" id="sec2_ch_ext_keyshare" placeholder="Group: x25519, Key Exchange Length: 32, Key..." />
+            </div>
+            <div class="param-group">
+              <label>Extension: supported_versions :</label>
+              <input type="text" class="param-input" id="sec2_ch_ext_ver" placeholder="TLS 1.3 (0x0304), TLS 1.2 (0x0303)" />
+            </div>
+            <div class="param-group">
+              <label>Extension: signature_algorithms :</label>
+              <input type="text" class="param-input" id="sec2_ch_ext_sig" placeholder="ecdsa_secp256r1_sha256, rsa_pss_rsae_sha256, ..." />
+            </div>
+            <div class="param-group">
+              <label>Extension: psk_key_exchange_modes :</label>
+              <input type="text" class="param-input" id="sec2_ch_ext_psk" placeholder="psk_dhe_ke (1)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 8: Server Hello, Change Cipher Spec, Application Data -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 8</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Server Hello, Change Cipher Spec, Application Data</strong>. Perhatikan bahwa di TLS 1.3 sertifikat dan handshake lanjutan telah terenkripsi dalam Application Data. Capture/crop hasilnya dan isi parameter:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-2-8')">
+            <span>📷 Lihat Contoh Modul (Server Hello, Change Cipher Spec, Application Data)</span>
+            <span id="ex-2-8-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-2-8">
+            <img src="media/image15.png" alt="Contoh Server Hello TLS 1.3" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 2.7 Paket Server Hello, Change Cipher Spec, Application Data TLS 1.3</div>
+          </div>
+          <div class="dropzone" id="dz-sec2_server_hello_img" data-field="sec2_server_hello_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Server Hello & Encrypted Application Data</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec2_server_hello_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Parameter Server Hello & Extensions (TLS 1.3)</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec2_sh')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>Handshake Type & Length :</label>
+              <input type="text" class="param-input" id="sec2_sh_type_len" placeholder="Server Hello (2), Length: 122" />
+            </div>
+            <div class="param-group">
+              <label>Version & Random :</label>
+              <input type="text" class="param-input" id="sec2_sh_rnd" placeholder="TLS 1.2 (legacy), Random bytes server (hex)" />
+            </div>
+            <div class="param-group">
+              <label>Session ID Length & Session ID :</label>
+              <input type="text" class="param-input" id="sec2_sh_sess" placeholder="Echo dari Client Session ID" />
+            </div>
+            <div class="param-group">
+              <label>Cipher Suite :</label>
+              <input type="text" class="param-input" id="sec2_sh_cs" placeholder="TLS_AES_256_GCM_SHA384 (0x1302)" />
+            </div>
+            <div class="param-group">
+              <label>Extension: supported_version :</label>
+              <input type="text" class="param-input" id="sec2_sh_ext_ver" placeholder="TLS 1.3 (0x0304)" />
+            </div>
+            <div class="param-group">
+              <label>Extension: key_share (Group, Key Exchange) :</label>
+              <input type="text" class="param-input" id="sec2_sh_keyshare" placeholder="Group: x25519, Key Exchange Length: 32, Key..." />
+            </div>
+            <div class="param-group">
+              <label>Change Cipher Spec (Type, Version, Length) :</label>
+              <input type="text" class="param-input" id="sec2_ccs_info" placeholder="Change Cipher Spec (20), TLS 1.2, Length: 1" />
+            </div>
+            <div class="param-group">
+              <label>Encrypted Application Data (Type, Version, Length) :</label>
+              <input type="text" class="param-input" id="sec2_appdata_info" placeholder="Application Data (23), TLS 1.3, Length: ..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 9: Change Cipher Spec & Application Data Client lanjutan -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 9</span>
+            <div class="step-instruction">
+              Berdasarkan data Wireshark, temukan paket <strong>Change Cipher Spec & Application Data</strong> berikutnya (dari client ke server atau sebaliknya). Capture/crop hasilnya dan isi parameter:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-2-9')">
+            <span>📷 Lihat Contoh Modul (Change Cipher Spec & Application Data)</span>
+            <span id="ex-2-9-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-2-9">
+            <img src="media/image16.png" alt="Contoh Change Cipher Spec & Application Data" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 2.8 Change Cipher Spec, Application Data</div>
+          </div>
+          <div class="dropzone" id="dz-sec2_client_appdata_img" data-field="sec2_client_appdata_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Change Cipher Spec & Application Data Lanjutan</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec2_client_appdata_img"></div>
+          </div>
+        </div>
+
+        <!-- 2.2 Analisis TLS 1.3 -->
+        <div style="margin-top: 24px;">
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:8px;">2.2 Analisis penerapan protokol TLS versi 1.3 pada web server komputer.ft.usk.ac.id</h3>
+          <div class="analysis-container">
+            <div class="analysis-toolbar">
+              <span style="font-size:0.8rem; color:var(--gray-600);">Tuliskan analisis Anda terhadap penerapan protokol TLS versi 1.3 pada web server komputer.ft.usk.ac.id di bawah ini:</span>
+              <button class="btn btn-secondary btn-sm" onclick="copyAnalysis('sec2_analysis')">📋 Salin Teks</button>
+            </div>
+            <textarea id="sec2_analysis" class="analysis-textarea" placeholder="Tuliskan analisis penerapan protokol TLS versi 1.3 pada web server komputer.ft.usk.ac.id di sini..."></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BAGIAN 3: SSHv2 -->
+    <div class="card" id="card-sec3">
+      <div class="card-header">
+        <h2>🔑 3. Secure Shell Versi 2 (SSHv2)</h2>
+        <span class="header-badge" style="background:var(--navy-mid); color:#fff; font-size:11px; padding:4px 12px;">Ubuntu Server & Windows Client</span>
+      </div>
+      <div class="card-body">
+        <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:12px;">3.1 Penerapan SSHv2 server pada Ubuntu dan SSHv2 client pada Windows</h3>
+
+        <!-- Step 1 & 2: Windows IP -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 1 & 2</span>
+            <div class="step-instruction">
+              Konekkan host Windows dengan HotSpot Wi-Fi. Cek IP address di host Windows (perintah <code>ipconfig</code>). Capture/crop hasilnya dan tuliskan IP address:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-3-2')">
+            <span>📷 Lihat Contoh Modul (IP Address Windows)</span>
+            <span id="ex-3-2-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-3-2">
+            <img src="media/image17.png" alt="Contoh IP Windows" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 3.1 IP Address Host Windows</div>
+          </div>
+          <div class="dropzone" id="dz-sec3_win_ip_img" data-field="sec3_win_ip_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot IP Address Windows (ipconfig)</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec3_win_ip_img"></div>
+          </div>
+          <div class="form-group" style="margin-top:10px;">
+            <label>IP Address Host Windows :</label>
+            <input type="text" id="sec3_win_ip" class="form-control" placeholder="Contoh: 192.168.43.15" />
+          </div>
+        </div>
+
+        <!-- Step 3 & 4: Ubuntu IP -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 3 & 4</span>
+            <div class="step-instruction">
+              Konekkan host Ubuntu dengan HotSpot Wi-Fi yang sama. Cek IP address di host Ubuntu (perintah <code>ip a</code> atau <code>ifconfig</code>). Capture/crop hasilnya dan tuliskan IP address:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-3-4')">
+            <span>📷 Lihat Contoh Modul (IP Address Ubuntu)</span>
+            <span id="ex-3-4-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-3-4">
+            <img src="media/image18.png" alt="Contoh IP Ubuntu" onclick="zoomImage(this.src)" />
+            <div class="example-preview-caption">Referensi Modul: Gambar 3.2 IP Address Host Ubuntu</div>
+          </div>
+          <div class="dropzone" id="dz-sec3_ubuntu_ip_img" data-field="sec3_ubuntu_ip_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot IP Address Ubuntu (ip a / ifconfig)</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec3_ubuntu_ip_img"></div>
+          </div>
+          <div class="form-group" style="margin-top:10px;">
+            <label>IP Address Host Ubuntu :</label>
+            <input type="text" id="sec3_ubuntu_ip" class="form-control" placeholder="Contoh: 192.168.43.88" />
+          </div>
+        </div>
+
+        <!-- Step 5 - 8: Putty Connection & Login -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 5 - 8</span>
+            <div class="step-instruction">
+              Jalankan SSH server di Ubuntu (<code>sudo apt install openssh-server</code>) & jalankan Wireshark di Ubuntu (filter <code>ssh</code>). Di Windows, buka <strong>Putty</strong> dan hubungkan ke IP Ubuntu. Lakukan login username dan password. Capture/crop tampilan Putty konfigurasi dan terminal login:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-3-7')">
+            <span>📷 Lihat Contoh Modul (Putty Config & Login)</span>
+            <span id="ex-3-7-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-3-7">
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <img src="media/image19.png" style="max-width:48%;" alt="Contoh Putty Config" onclick="zoomImage(this.src)" />
+              <img src="media/image20.png" style="max-width:48%;" alt="Contoh Putty Login" onclick="zoomImage(this.src)" />
+            </div>
+            <div class="example-preview-caption">Referensi Modul: Gambar 3.3 Konfigurasi Putty & Gambar 3.4 Terminal Login Berhasil</div>
+          </div>
+          <div class="dropzone" id="dz-sec3_putty_img" data-field="sec3_putty_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Konfigurasi Putty & Terminal SSH Login Berhasil</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec3_putty_img"></div>
+          </div>
+        </div>
+
+        <!-- Step 9 & 10: String Identifikasi SSH Server & Client -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 9 & 10</span>
+            <div class="step-instruction">
+              Pada Wireshark host Ubuntu, temukan paket <strong>String Identifikasi</strong> yang dikirimkan oleh SSH Server dan SSH Client. Capture/crop dan tuliskan nilai string/protocol:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-3-9')">
+            <span>📷 Lihat Contoh Modul (String Identifikasi SSH)</span>
+            <span id="ex-3-9-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-3-9">
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <img src="media/image21.png" style="max-width:48%;" alt="String Identifikasi Server" onclick="zoomImage(this.src)" />
+              <img src="media/image22.png" style="max-width:48%;" alt="String Identifikasi Client" onclick="zoomImage(this.src)" />
+            </div>
+            <div class="example-preview-caption">Referensi Modul: Gambar 3.5 String Server & Gambar 3.6 String Client</div>
+          </div>
+          <div class="dropzone" id="dz-sec3_ident_img" data-field="sec3_ident_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Paket String Identifikasi SSH Server & Client</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec3_ident_img"></div>
+          </div>
+          <div class="form-grid" style="margin-top:12px;">
+            <div class="form-group">
+              <label>String Identifikasi SSH Server (Protocol) :</label>
+              <input type="text" id="sec3_ident_server" class="form-control" placeholder="Contoh: SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.1" />
+            </div>
+            <div class="form-group">
+              <label>String Identifikasi SSH Client (Protocol) :</label>
+              <input type="text" id="sec3_ident_client" class="form-control" placeholder="Contoh: SSH-2.0-PuTTY_Release_0.76" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 11 & 12: Key Exchange Init (Server & Client) -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 11 & 12</span>
+            <div class="step-instruction">
+              Pada Wireshark Ubuntu, temukan paket <strong>Key Exchange Init</strong> dari SSH Server dan SSH Client. Capture/crop hasilnya dan isi parameter algoritma:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-3-11')">
+            <span>📷 Lihat Contoh Modul (Key Exchange Init)</span>
+            <span id="ex-3-11-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-3-11">
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <img src="media/image23.png" style="max-width:48%;" alt="KEX Init Server" onclick="zoomImage(this.src)" />
+              <img src="media/image24.png" style="max-width:48%;" alt="KEX Init Client" onclick="zoomImage(this.src)" />
+            </div>
+            <div class="example-preview-caption">Referensi Modul: Gambar 3.7 KEX Init Server & Gambar 3.8 KEX Init Client</div>
+          </div>
+          <div class="dropzone" id="dz-sec3_kex_init_img" data-field="sec3_kex_init_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Key Exchange Init (Server & Client)</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec3_kex_init_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Algoritma yang Didukung SSH Server</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec3_server_kex')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>kex_algorithms :</label>
+              <input type="text" class="param-input" id="sec3_srv_kex" placeholder="curve25519-sha256, ecdh-sha2-nistp256, ..." />
+            </div>
+            <div class="param-group">
+              <label>server_host_key_algorithms :</label>
+              <input type="text" class="param-input" id="sec3_srv_hostkey" placeholder="rsa-sha2-512, rsa-sha2-256, ecdsa-sha2-nistp256, ..." />
+            </div>
+            <div class="param-group">
+              <label>encryption_algorithms_client_to_server :</label>
+              <input type="text" class="param-input" id="sec3_srv_enc_c2s" placeholder="chacha20-poly1305@openssh.com, aes128-ctr, ..." />
+            </div>
+            <div class="param-group">
+              <label>encryption_algorithms_server_to_client :</label>
+              <input type="text" class="param-input" id="sec3_srv_enc_s2c" placeholder="chacha20-poly1305@openssh.com, aes128-ctr, ..." />
+            </div>
+            <div class="param-group">
+              <label>mac_algorithms_client_to_server :</label>
+              <input type="text" class="param-input" id="sec3_srv_mac_c2s" placeholder="umac-64-etm@openssh.com, hmac-sha2-256-etm, ..." />
+            </div>
+            <div class="param-group">
+              <label>mac_algorithms_server_to_client :</label>
+              <input type="text" class="param-input" id="sec3_srv_mac_s2c" placeholder="umac-64-etm@openssh.com, hmac-sha2-256-etm, ..." />
+            </div>
+            <div class="param-group">
+              <label>compression_algorithms_client_to_server :</label>
+              <input type="text" class="param-input" id="sec3_srv_comp_c2s" placeholder="none, zlib@openssh.com" />
+            </div>
+            <div class="param-group">
+              <label>compression_algorithms_server_to_client :</label>
+              <input type="text" class="param-input" id="sec3_srv_comp_s2c" placeholder="none, zlib@openssh.com" />
+            </div>
+
+            <div class="param-title" style="margin-top:10px;">
+              <span>Algoritma yang Didukung SSH Client</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec3_client_kex')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>kex_algorithms :</label>
+              <input type="text" class="param-input" id="sec3_cli_kex" placeholder="curve25519-sha256, ecdh-sha2-nistp256, ..." />
+            </div>
+            <div class="param-group">
+              <label>server_host_key_algorithms :</label>
+              <input type="text" class="param-input" id="sec3_cli_hostkey" placeholder="rsa-sha2-512, rsa-sha2-256, ecdsa-sha2-nistp256, ..." />
+            </div>
+            <div class="param-group">
+              <label>encryption_algorithms_client_to_server :</label>
+              <input type="text" class="param-input" id="sec3_cli_enc_c2s" placeholder="chacha20-poly1305@openssh.com, aes256-gcm, ..." />
+            </div>
+            <div class="param-group">
+              <label>encryption_algorithms_server_to_client :</label>
+              <input type="text" class="param-input" id="sec3_cli_enc_s2c" placeholder="chacha20-poly1305@openssh.com, aes256-gcm, ..." />
+            </div>
+            <div class="param-group">
+              <label>mac_algorithms_client_to_server :</label>
+              <input type="text" class="param-input" id="sec3_cli_mac_c2s" placeholder="hmac-sha2-256, hmac-sha2-512, ..." />
+            </div>
+            <div class="param-group">
+              <label>mac_algorithms_server_to_client :</label>
+              <input type="text" class="param-input" id="sec3_cli_mac_s2c" placeholder="hmac-sha2-256, hmac-sha2-512, ..." />
+            </div>
+            <div class="param-group">
+              <label>compression_algorithms_client_to_server :</label>
+              <input type="text" class="param-input" id="sec3_cli_comp_c2s" placeholder="none" />
+            </div>
+            <div class="param-group">
+              <label>compression_algorithms_server_to_client :</label>
+              <input type="text" class="param-input" id="sec3_cli_comp_s2c" placeholder="none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 13 & 14: ECDH Key Exchange Init & Reply -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 13 & 14</span>
+            <div class="step-instruction">
+              Pada Wireshark Ubuntu, temukan paket <strong>ECDH Key Exchange Init</strong> (Client) dan <strong>ECDH Key Exchange Reply</strong> (Server). Capture/crop dan tuliskan informasi kunci publik ephemeral:
+            </div>
+          </div>
+          <div class="example-preview-toggle" onclick="toggleExample('ex-3-13')">
+            <span>📷 Lihat Contoh Modul (ECDH Init & Reply)</span>
+            <span id="ex-3-13-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-3-13">
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+              <img src="media/image25.png" style="max-width:48%;" alt="ECDH Init Client" onclick="zoomImage(this.src)" />
+              <img src="media/image26.png" style="max-width:48%;" alt="ECDH Reply Server" onclick="zoomImage(this.src)" />
+            </div>
+            <div class="example-preview-caption">Referensi Modul: Gambar 3.9 ECDH Client Init & Gambar 3.10 ECDH Server Reply</div>
+          </div>
+          <div class="dropzone" id="dz-sec3_ecdh_img" data-field="sec3_ecdh_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot ECDH Key Exchange Init & Reply</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec3_ecdh_img"></div>
+          </div>
+          <div class="param-grid">
+            <div class="param-title">
+              <span>Kunci Publik SSH Client & Server</span>
+              <button class="btn btn-secondary btn-sm" onclick="fillSampleParams('sec3_ecdh')">⚡ Isi Nilai Contoh</button>
+            </div>
+            <div class="param-group">
+              <label>ECDH client's ephemeral public key length :</label>
+              <input type="text" class="param-input" id="sec3_cli_ecdh_len" placeholder="Contoh: 32" />
+            </div>
+            <div class="param-group">
+              <label>ECDH client's ephemeral public key (Q_C) :</label>
+              <input type="text" class="param-input" id="sec3_cli_ecdh_key" placeholder="Kunci publik client (hex)" />
+            </div>
+            <div class="param-group">
+              <label>ECDH server's ephemeral public key length :</label>
+              <input type="text" class="param-input" id="sec3_srv_ecdh_len" placeholder="Contoh: 32" />
+            </div>
+            <div class="param-group">
+              <label>ECDH server's ephemeral public key (Q_S / Q_C) :</label>
+              <input type="text" class="param-input" id="sec3_srv_ecdh_key" placeholder="Kunci publik server (hex)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3.2 Analisis SSHv2 -->
+        <div style="margin-top: 24px;">
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:8px;">3.2 Analisis penerapan SSHv2 server pada Ubuntu dan SSHv2 client pada Windows</h3>
+          <div class="analysis-container">
+            <div class="analysis-toolbar">
+              <span style="font-size:0.8rem; color:var(--gray-600);">Tuliskan analisis Anda terhadap penerapan SSHv2 server pada Ubuntu dan SSHv2 client pada Windows di bawah ini:</span>
+              <button class="btn btn-secondary btn-sm" onclick="copyAnalysis('sec3_analysis')">📋 Salin Teks</button>
+            </div>
+            <textarea id="sec3_analysis" class="analysis-textarea" placeholder="Tuliskan analisis penerapan SSHv2 di sini..."></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BAGIAN 4: SSH TUNNELING -->
+    <div class="card" id="card-sec4">
+      <div class="card-header">
+        <h2>🛡️ 4. SSH Tunneling</h2>
+        <span class="header-badge" style="background:var(--navy-mid); color:#fff; font-size:11px; padding:4px 12px;">Mengamankan Trafik HTTP</span>
+      </div>
+      <div class="card-body">
+        <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:12px;">4.1 Penerapan SSH Tunneling untuk mengamankan trafik HTTP</h3>
+
+        <!-- Step 1 - 4: IP Address Windows & Ubuntu -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 1 - 4</span>
+            <div class="step-instruction">
+              Konekkan Windows dan Ubuntu ke HotSpot Wi-Fi yang sama. Cek IP address host Windows dan IP host Ubuntu. Capture/crop hasilnya dan tuliskan IP address:
+            </div>
+          </div>
+          <div class="dropzone" id="dz-sec4_ips_img" data-field="sec4_ips_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot IP Address Windows & Ubuntu</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec4_ips_img"></div>
+          </div>
+          <div class="form-grid" style="margin-top:12px;">
+            <div class="form-group">
+              <label>IP Address Host Windows :</label>
+              <input type="text" id="sec4_win_ip" class="form-control" placeholder="Contoh: 192.168.43.15" />
+            </div>
+            <div class="form-group">
+              <label>IP Address Host Ubuntu :</label>
+              <input type="text" id="sec4_ubuntu_ip" class="form-control" placeholder="Contoh: 192.168.43.88" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 - 8: Akses HTTP Langsung & Plaintext Wireshark -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 5 - 8</span>
+            <div class="step-instruction">
+              Jalankan Apache di Ubuntu. Buat halaman web berisi informasi kelompok/nama/NIM. Buka browser Windows ke <code>http://[IP-Ubuntu]</code>. Di Wireshark Ubuntu, temukan paket <strong>HTTP plain text</strong> yang dikirimkan. Capture/crop kedua hasilnya:
+            </div>
+          </div>
+          <div class="dropzone" id="dz-sec4_plain_http_img" data-field="sec4_plain_http_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Akses Browser HTTP & Paket Plain Text di Wireshark</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec4_plain_http_img"></div>
+          </div>
+        </div>
+
+        <!-- Step 9 - 12: SSH Tunneling Port Forwarding & Encrypted Verification -->
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 9 - 12</span>
+            <div class="step-instruction">
+              Di Putty, atur <strong>SSH Tunnel (Port Forwarding L8080 -> localhost:80)</strong>. Buka koneksi SSH tunnel dan login. Buka browser di Windows ke <code>http://localhost:8080</code>. Di Wireshark Ubuntu, buktikan trafik HTTP kini terenkripsi dalam paket SSH. Capture/crop hasilnya:
+            </div>
+          </div>
+          <div class="dropzone" id="dz-sec4_tunnel_img" data-field="sec4_tunnel_img">
+            <div class="dropzone-icon">📤</div>
+            <div class="dropzone-text">Upload Screenshot Konfigurasi Tunneling Putty, Akses localhost:8080, & Wireshark Terenkripsi</div>
+            <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+            <div class="dropzone-thumbs" id="thumbs-sec4_tunnel_img"></div>
+          </div>
+        </div>
+
+        <!-- 4.2 Analisis SSH Tunneling -->
+        <div style="margin-top: 24px;">
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:8px;">4.2 Analisis penerapan SSH Tunneling untuk mengamankan trafik HTTP</h3>
+          <div class="analysis-container">
+            <div class="analysis-toolbar">
+              <span style="font-size:0.8rem; color:var(--gray-600);">Tuliskan analisis Anda terhadap penerapan SSH Tunneling untuk mengamankan trafik HTTP di bawah ini:</span>
+              <button class="btn btn-secondary btn-sm" onclick="copyAnalysis('sec4_analysis')">📋 Salin Teks</button>
+            </div>
+            <textarea id="sec4_analysis" class="analysis-textarea" placeholder="Tuliskan analisis penerapan SSH Tunneling di sini..."></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BAGIAN 5: TLS 1.3 PADA WEB SERVER APACHE -->
+    <div class="card" id="card-sec5">
+      <div class="card-header">
+        <h2>🌐 5. TLS v1.3 pada Web Server Apache</h2>
+        <span class="header-badge" style="background:var(--navy-mid); color:#fff; font-size:11px; padding:4px 12px;">Konfigurasi Apache HTTPS TLS 1.3</span>
+      </div>
+      <div class="card-body">
+        <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:12px;">5.1 Penerapan TLS v1.3 pada Web Server Apache</h3>
+        
+        <div class="step-box">
+          <div class="step-header">
+            <span class="step-number">Langkah 5.1</span>
+            <div class="step-instruction">
+              Buatkan langkah-langkah penerapan TLS v1.3 pada web server Apache anda untuk mengamankan trafik HTTP. Perlihatkan bukti screenshot hasil konfigurasi dan pengujian:
+            </div>
+          </div>
+          
+          <div class="example-preview-toggle" onclick="toggleExample('ex-5-1')">
+            <span>📷 Lihat Panduan Modul (Instalasi Certbot & Konfigurasi Apache TLS 1.3)</span>
+            <span id="ex-5-1-icon">▼</span>
+          </div>
+          <div class="example-preview-content" id="ex-5-1">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:10px; margin-top:8px;">
+              <img src="media/image35.png" alt="Panduan 1" onclick="zoomImage(this.src)" />
+              <img src="media/image36.png" alt="Panduan 2" onclick="zoomImage(this.src)" />
+              <img src="media/image37.png" alt="Panduan 3" onclick="zoomImage(this.src)" />
+              <img src="media/image38.png" alt="Panduan 4" onclick="zoomImage(this.src)" />
+            </div>
+            <div class="example-preview-caption">Referensi Modul: Gambar 5.1 - 5.8 Panduan Konfigurasi TLS Apache & Terminal Setup</div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--gray-600);">Langkah-langkah Konfigurasi Apache TLS 1.3 :</label>
+            <textarea id="sec5_steps" class="analysis-textarea" style="min-height:160px; margin-top:6px;" placeholder="Tuliskan urutan langkah-langkah konfigurasi Apache TLS 1.3 di sini..."></textarea>
+          </div>
+
+          <div style="margin-top:14px;">
+            <label style="font-size:0.8rem; font-weight:600; color:var(--gray-600);">Upload Bukti Screenshot Hasil Penerapan TLS v1.3 Apache :</label>
+            <div class="dropzone" id="dz-sec5_apache_img" data-field="sec5_apache_img" style="margin-top:6px;">
+              <div class="dropzone-icon">📤</div>
+              <div class="dropzone-text">Upload Screenshot Konfigurasi Apache, Service Status, dan Bukti Browser HTTPS TLS 1.3</div>
+              <div class="dropzone-subtext">Klik untuk memilih file, drag & drop, atau paste (Ctrl+V)</div>
+              <div class="dropzone-thumbs" id="thumbs-sec5_apache_img"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5.2 Analisis TLS 1.3 pada Apache -->
+        <div style="margin-top: 24px;">
+          <h3 style="font-size:0.95rem; font-weight:700; color:var(--navy); margin-bottom:8px;">5.2 Analisis penerapan TLS v1.3 pada Web Server Apache</h3>
+          <div class="analysis-container">
+            <div class="analysis-toolbar">
+              <span style="font-size:0.8rem; color:var(--gray-600);">Tuliskan analisis Anda terhadap penerapan TLS v1.3 pada web server Apache untuk mengamankan trafik HTTP di bawah ini:</span>
+              <button class="btn btn-secondary btn-sm" onclick="copyAnalysis('sec5_analysis')">📋 Salin Teks</button>
+            </div>
+            <textarea id="sec5_analysis" class="analysis-textarea" placeholder="Tuliskan analisis penerapan TLS v1.3 pada Apache di sini..."></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Image Zoom Modal -->
+  <div class="modal-overlay" id="zoom-modal" onclick="closeZoomModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeZoomModal()">&times;</button>
+      <img id="zoom-modal-img" src="" alt="Zoom Image" />
+    </div>
+  </div>
+
+  <footer>
+    <div style="font-weight:600; color:var(--navy-mid); margin-bottom:4px;">
+      STIK6063 Keamanan Jaringan — CBL-1: Penerapan dan Analisis Transport-Level Security
+    </div>
+    <div>Laboratorium Jaringan Komputer, Departemen Teknik Elektro dan Komputer, Fakultas Teknik, Universitas Syiah Kuala</div>
+    <div id="live-clock" style="margin-top:6px; font-family:var(--font-mono); font-size:0.75rem;"></div>
+  </footer>
+
+  <script>
+    const LOGO_USK_B64 = "data:image/png;base64,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";
+
+    const STORAGE_KEY = "cbl1_transport_security_v1";
+
+    const STUDENT_DATABASE = {
+      "2304111010031": "NABIL MUHAMMAD TSADZALI",
+      "2404111010016": "ZAKI ALKAF",
+      "2404111010019": "KHALIDA",
+      "2404111010060": "Aulia Akbar",
+      "2404111010066": "Hafidh Alfarisi",
+      "2404111010075": "CAESAR RAHMAWAN",
+      "2404111010102": "MUTHMAINNAH",
+      "2104111010093": "Sarah Ar Rayyan (admin / asdos)"
+    };
+
+    function getStudentName(npm) {
+      const clean = String(npm || '').replace(/[^0-9]/g, '').trim();
+      return STUDENT_DATABASE[clean] || '';
+    }
+
+    const SAMPLE_PARAMS = {
+      sec1_ch: {
+        sec1_ch_type: "Client Hello (1)",
+        sec1_ch_len: "512",
+        sec1_ch_ver: "TLS 1.2 (0x0303)",
+        sec1_ch_time: "Aug 15, 2025 10:15:30.000000000 UTC",
+        sec1_ch_rnd: "7a 8f 41 2c b9 e3 12 04 d8 f1 6a 9c 33 5b 81 e7...",
+        sec1_ch_sess: "Length: 32, Session ID: 4d 9a 11 8c f2 e4 50 19...",
+        sec1_ch_cslen: "34",
+        sec1_ch_cs3: "1. TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, 2. TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, 3. TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+        sec1_ch_ext_sni: "ami.usk.ac.id",
+        sec1_ch_ext_ec: "x25519 (0x001d), secp256r1 (0x0017), secp384r1 (0x0018)",
+        sec1_ch_ext_ecfmt: "uncompressed (0)",
+        sec1_ch_ext_sig: "rsa_pss_rsae_sha256 (0x0804), ecdsa_secp256r1_sha256 (0x0403), rsa_pkcs1_sha256 (0x0401)"
+      },
+      sec1_sh: {
+        sec1_sh_type: "Server Hello (2)",
+        sec1_sh_len: "85",
+        sec1_sh_ver: "TLS 1.2 (0x0303)",
+        sec1_sh_time: "Aug 15, 2025 10:15:30.000000000 UTC",
+        sec1_sh_rnd: "c2 18 9e 5f 43 7a b1 09 d3 82 ef 44 19 60 7b 3a...",
+        sec1_sh_sess: "Length: 32, Session ID: 4d 9a 11 8c f2 e4 50 19...",
+        sec1_sh_cs: "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 (0xc030)",
+        sec1_sh_comp: "null (0)"
+      },
+      sec1_cert: {
+        sec1_cert_type_len: "Certificate (11), Length: 3942",
+        sec1_cert_len: "3939",
+        sec1_cert_cn: "ami.usk.ac.id",
+        sec1_cert_org: "Universitas Syiah Kuala",
+        sec1_cert_country: "ID",
+        sec1_cert_san: "DNS: ami.usk.ac.id, DNS: www.ami.usk.ac.id",
+        sec1_ske_type_len: "Server Key Exchange (12), Length: 328",
+        sec1_ske_curve: "named_curve (3), secp256r1 (0x0017)",
+        sec1_ske_pubkey: "Length: 65, Pubkey: 04 3a 9f 11 8c 7e 22 b4 5d 8a...",
+        sec1_ske_sig: "rsa_pss_rsae_sha256 (0x0804), Length: 256",
+        sec1_shd_info: "Server Hello Done (14), Length: 0"
+      },
+      sec1_cke: {
+        sec1_cke_type_len: "Client Key Exchange (16), Length: 33",
+        sec1_cke_pubkey: "Length: 32, Pubkey: 5f 88 12 e9 4a bc 70 31 de...",
+        sec1_ccs_info: "Change Cipher Spec (20), Version: TLS 1.2, Length: 1, Message: 1",
+        sec1_ehm_info: "Handshake (22), Version: TLS 1.2, Length: 40, Encrypted Message: 8a f4..."
+      },
+      sec2_ch: {
+        sec2_ch_type: "Client Hello (1)",
+        sec2_ch_len_ver: "Length: 512, Version: TLS 1.2 (0x0303 - legacy)",
+        sec2_ch_rnd: "8e 31 b4 f0 92 1a 7c d5 49 eb 10 33 f8 2a 67...",
+        sec2_ch_sess: "Length: 32, Session ID: a1 45 9f 30 e2 d8...",
+        sec2_ch_cslen: "32",
+        sec2_ch_cs3: "1. TLS_AES_128_GCM_SHA256 (0x1301), 2. TLS_AES_256_GCM_SHA384 (0x1302), 3. TLS_CHACHA20_POLY1305_SHA256 (0x1303)",
+        sec2_ch_ext_sni: "komputer.ft.usk.ac.id",
+        sec2_ch_ext_groups: "x25519 (0x001d), secp256r1 (0x0017), secp384r1 (0x0018)",
+        sec2_ch_ext_keyshare: "Group: x25519, Key Exchange Length: 32, Key: 9d 7a 44...",
+        sec2_ch_ext_ver: "TLS 1.3 (0x0304), TLS 1.2 (0x0303)",
+        sec2_ch_ext_sig: "ecdsa_secp256r1_sha256 (0x0403), rsa_pss_rsae_sha256 (0x0804)",
+        sec2_ch_ext_psk: "psk_dhe_ke (1)"
+      },
+      sec2_sh: {
+        sec2_sh_type_len: "Server Hello (2), Length: 122",
+        sec2_sh_rnd: "TLS 1.2 (legacy), Random: 5c 91 a3 e7 40 b2 88 f1...",
+        sec2_sh_sess: "Length: 32, Session ID: a1 45 9f 30 e2 d8... (Echo)",
+        sec2_sh_cs: "TLS_AES_256_GCM_SHA384 (0x1302)",
+        sec2_sh_ext_ver: "TLS 1.3 (0x0304)",
+        sec2_sh_keyshare: "Group: x25519, Key Exchange Length: 32, Key: 4a 1b 88...",
+        sec2_ccs_info: "Change Cipher Spec (20), TLS 1.2, Length: 1, Message: 1 (Compatibility)",
+        sec2_appdata_info: "Application Data (23), TLS 1.3, Length: 1420 (Encrypted Handshake & Data)"
+      },
+      sec3_server_kex: {
+        sec3_srv_kex: "curve25519-sha256, ecdh-sha2-nistp256, ecdh-sha2-nistp384, diffie-hellman-group-exchange-sha256",
+        sec3_srv_hostkey: "rsa-sha2-512, rsa-sha2-256, ecdsa-sha2-nistp256, ssh-ed25519",
+        sec3_srv_enc_c2s: "chacha20-poly1305@openssh.com, aes128-ctr, aes192-ctr, aes256-ctr, aes128-gcm@openssh.com, aes256-gcm@openssh.com",
+        sec3_srv_enc_s2c: "chacha20-poly1305@openssh.com, aes128-ctr, aes192-ctr, aes256-ctr, aes128-gcm@openssh.com, aes256-gcm@openssh.com",
+        sec3_srv_mac_c2s: "umac-64-etm@openssh.com, umac-128-etm@openssh.com, hmac-sha2-256-etm@openssh.com, hmac-sha2-512-etm@openssh.com",
+        sec3_srv_mac_s2c: "umac-64-etm@openssh.com, umac-128-etm@openssh.com, hmac-sha2-256-etm@openssh.com, hmac-sha2-512-etm@openssh.com",
+        sec3_srv_comp_c2s: "none, zlib@openssh.com",
+        sec3_srv_comp_s2c: "none, zlib@openssh.com"
+      },
+      sec3_client_kex: {
+        sec3_cli_kex: "curve25519-sha256, ecdh-sha2-nistp256, ecdh-sha2-nistp384, diffie-hellman-group14-sha256",
+        sec3_cli_hostkey: "rsa-sha2-512, rsa-sha2-256, ecdsa-sha2-nistp256, ssh-ed25519, ssh-rsa",
+        sec3_cli_enc_c2s: "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes128-ctr",
+        sec3_cli_enc_s2c: "chacha20-poly1305@openssh.com, aes256-gcm@openssh.com, aes128-gcm@openssh.com, aes256-ctr, aes128-ctr",
+        sec3_cli_mac_c2s: "hmac-sha2-256, hmac-sha2-512, hmac-sha1",
+        sec3_cli_mac_s2c: "hmac-sha2-256, hmac-sha2-512, hmac-sha1",
+        sec3_cli_comp_c2s: "none",
+        sec3_cli_comp_s2c: "none"
+      },
+      sec3_ecdh: {
+        sec3_cli_ecdh_len: "32",
+        sec3_cli_ecdh_key: "3c 7a 88 19 ef 42 b1 05 9d 33 a8 4e 1b 60 7f 92 81 44 eb 20 d7 9a 11 5f 6c 38 41 a0 2e b9 74 15",
+        sec3_srv_ecdh_len: "32",
+        sec3_srv_ecdh_key: "7f 21 a0 9c 4b 18 55 e2 39 8d f1 60 2a 7e 84 9b 11 32 cc 45 a9 87 14 eb 60 38 d2 19 4e f1 2a 50"
+      }
+    };
+
+    let state = {
+      kelompok: "",
+      kelas: "Kelas 11",
+      dosen: "Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom",
+      members: [
+        { nama: "", nim: "" },
+        { nama: "", nim: "" },
+        { nama: "", nim: "" },
+        { nama: "", nim: "" }
+      ],
+      images: {},
+      params: {},
+      analysis: {}
+    };
+
+    let saveTimer = null;
+    let activeDropzoneField = null;
+
+    // ==========================================
+    // INITIALIZATION & EVENT LISTENERS
+    // ==========================================
+    window.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      renderMembers();
+      initUI();
+      wireDropzones();
+      wireInputs();
+      updateProgress();
+      startLiveClock();
+    });
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          state = { ...state, ...parsed };
+        }
+      } catch (e) {
+        console.warn("Gagal memuat local state", e);
+      }
+    }
+
+    function saveState() {
+      const dot = document.getElementById("save-dot");
+      const status = document.getElementById("save-status");
+      if (dot) dot.style.background = "var(--gold)";
+      if (status) status.innerText = "Menyimpan...";
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          if (dot) dot.style.background = "var(--green)";
+          if (status) status.innerText = "Tersimpan otomatis";
+          updateProgress();
+        } catch (e) {
+          console.warn("Gagal menyimpan ke localStorage", e);
+          if (dot) dot.style.background = "var(--red)";
+          if (status) status.innerText = "Penyimpanan penuh / gagal";
+        }
+      }, 500);
+    }
+
+    function renderMembers() {
+      const list = document.getElementById("memberList");
+      if (!list) return;
+      list.innerHTML = "";
+
+      while (!state.members || state.members.length < 4) {
+        if (!state.members) state.members = [];
+        state.members.push({ nama: "", nim: "" });
+      }
+
+      state.members.forEach((m, idx) => {
+        const row = document.createElement("div");
+        row.className = "member-row-flex";
+        row.innerHTML = `
+          <span class="idx">${idx + 1}.</span>
+          <input type="text" placeholder="Masukkan 13 digit NPM Anggota ${idx + 1}" value="${escapeHtml(m.nim || "")}" data-mnim maxlength="13" list="studentQuizList" autocomplete="off" />
+          <input type="text" placeholder="Nama akan terisi otomatis dari NPM..." value="${escapeHtml(m.nama || "")}" data-mname readonly style="background-color: var(--gray-100, #f1f5f9); cursor: not-allowed;" />
+        `;
+
+        const nimInput = row.querySelector("[data-mnim]");
+        const namaInput = row.querySelector("[data-mname]");
+
+        // Auto lookup on render if nim exists
+        if (m.nim) {
+          const matched = getStudentName(m.nim);
+          if (matched) {
+            m.nama = matched;
+            namaInput.value = matched;
+            nimInput.style.borderColor = "var(--green, #16a34a)";
+          }
+        }
+
+        nimInput.addEventListener("input", (e) => {
+          const nim = e.target.value.replace(/[^0-9]/g, "").trim();
+          if (nim.length > 13) {
+            e.target.value = nim.slice(0, 13);
+          }
+          m.nim = e.target.value;
+          const matchedName = getStudentName(m.nim);
+          if (matchedName) {
+            m.nama = matchedName;
+            namaInput.value = matchedName;
+            nimInput.style.borderColor = "var(--green, #16a34a)";
+          } else {
+            if (e.target.value.length < 13) {
+              m.nama = "";
+              namaInput.value = "";
+            }
+            nimInput.style.borderColor = "";
+          }
+          saveState();
+        });
+
+        namaInput.addEventListener("input", (e) => {
+          m.nama = e.target.value;
+          saveState();
+        });
+
+        list.appendChild(row);
+      });
+    }
+
+    function initUI() {
+      const kelEl = document.getElementById("kelompok");
+      if (kelEl) {
+        kelEl.value = state.kelompok || "";
+        kelEl.addEventListener("input", (e) => {
+          state.kelompok = e.target.value;
+          saveState();
+        });
+      }
+
+      // Restore params and analysis
+      document.querySelectorAll(".param-input, .analysis-textarea, #sec3_win_ip, #sec3_ubuntu_ip, #sec3_ident_server, #sec3_ident_client, #sec4_win_ip, #sec4_ubuntu_ip, #sec5_steps").forEach(el => {
+        const id = el.id;
+        if (state.params && state.params[id] !== undefined) {
+          el.value = state.params[id];
+        } else if (state.analysis && state.analysis[id] !== undefined) {
+          el.value = state.analysis[id];
+        }
+      });
+
+      // Render existing dropzone thumbnails
+      if (state.images) {
+        Object.keys(state.images).forEach(field => {
+          const thumbs = document.getElementById(`thumbs-${field}`);
+          if (thumbs) renderThumbs(field, thumbs);
+        });
+      }
+    }
+
+    function wireInputs() {
+      document.querySelectorAll(".param-input, #sec3_win_ip, #sec3_ubuntu_ip, #sec3_ident_server, #sec3_ident_client, #sec4_win_ip, #sec4_ubuntu_ip").forEach(el => {
+        el.addEventListener("input", (e) => {
+          if (!state.params) state.params = {};
+          state.params[e.target.id] = e.target.value;
+          saveState();
+        });
+      });
+
+      document.querySelectorAll(".analysis-textarea, #sec5_steps").forEach(el => {
+        el.addEventListener("input", (e) => {
+          if (!state.analysis) state.analysis = {};
+          state.analysis[e.target.id] = e.target.value;
+          saveState();
+        });
+      });
+    }
+
+    // ==========================================
+    // DROPZONE & IMAGE HANDLING
+    // ==========================================
+    function wireDropzones() {
+      document.querySelectorAll(".dropzone").forEach(dz => {
+        const field = dz.dataset.field;
+        const thumbs = document.getElementById(`thumbs-${field}`);
+
+        const fileInp = document.createElement("input");
+        fileInp.type = "file";
+        fileInp.accept = "image/*";
+        fileInp.multiple = true;
+        fileInp.style.display = "none";
+        dz.appendChild(fileInp);
+
+        dz.addEventListener("click", (e) => {
+          if (e.target.classList.contains("thumb-del") || e.target.tagName === "IMG") return;
+          activeDropzoneField = field;
+          fileInp.click();
+        });
+
+        fileInp.addEventListener("change", (e) => {
+          if (e.target.files && e.target.files.length) {
+            handleFiles(e.target.files, field, thumbs);
+          }
+        });
+
+        dz.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          dz.classList.add("dragover");
+        });
+
+        dz.addEventListener("dragleave", () => {
+          dz.classList.remove("dragover");
+        });
+
+        dz.addEventListener("drop", (e) => {
+          e.preventDefault();
+          dz.classList.remove("dragover");
+          if (e.dataTransfer.files && e.dataTransfer.files.length) {
+            handleFiles(e.dataTransfer.files, field, thumbs);
+          }
+        });
+      });
+
+      // Global paste listener
+      window.addEventListener("paste", (e) => {
+        if (!activeDropzoneField) return;
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        const files = [];
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf("image") !== -1) {
+            const file = items[i].getAsFile();
+            if (file) files.push(file);
+          }
+        }
+        if (files.length > 0) {
+          const thumbs = document.getElementById(`thumbs-${activeDropzoneField}`);
+          handleFiles(files, activeDropzoneField, thumbs);
+        }
+      });
+    }
+
+    function handleFiles(files, field, thumbsEl) {
+      if (!state.images) state.images = {};
+      if (!state.images[field]) state.images[field] = [];
+
+      Array.from(files).forEach(file => {
+        compressImage(file, 1600, 0.82, (dataUrl) => {
+          state.images[field].push({ dataUrl, name: file.name });
+          renderThumbs(field, thumbsEl);
+          saveState();
+        });
+      });
+    }
+
+    function compressImage(file, maxW, quality, callback) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width;
+          let h = img.height;
+          if (w > maxW) {
+            h = Math.round((h * maxW) / w);
+            w = maxW;
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          callback(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function renderThumbs(field, thumbsEl) {
+      if (!thumbsEl) return;
+      thumbsEl.innerHTML = "";
+      const imgs = (state.images && state.images[field]) || [];
+
+      imgs.forEach((im, idx) => {
+        const wrap = document.createElement("div");
+        wrap.className = "thumb-item";
+        wrap.innerHTML = `
+          <img src="${im.dataUrl}" alt="thumb" onclick="zoomImage(this.src)" />
+          <button class="thumb-del" onclick="deleteThumb('${field}', ${idx})" title="Hapus">&times;</button>
+        `;
+        thumbsEl.appendChild(wrap);
+      });
+    }
+
+    function deleteThumb(field, idx) {
+      if (state.images && state.images[field]) {
+        state.images[field].splice(idx, 1);
+        const thumbsEl = document.getElementById(`thumbs-${field}`);
+        renderThumbs(field, thumbsEl);
+        saveState();
+      }
+    }
+
+    // ==========================================
+    // HELPERS & ACTIONS
+    // ==========================================
+    function toggleExample(id) {
+      const el = document.getElementById(id);
+      const icon = document.getElementById(id + "-icon");
+      if (!el) return;
+      if (el.style.display === "block") {
+        el.style.display = "none";
+        if (icon) icon.innerText = "▼";
+      } else {
+        el.style.display = "block";
+        if (icon) icon.innerText = "▲";
+      }
+    }
+
+    function zoomImage(src) {
+      const modal = document.getElementById("zoom-modal");
+      const modalImg = document.getElementById("zoom-modal-img");
+      if (modal && modalImg) {
+        modalImg.src = src;
+        modal.style.display = "flex";
+      }
+    }
+
+    function closeZoomModal() {
+      const modal = document.getElementById("zoom-modal");
+      if (modal) modal.style.display = "none";
+    }
+
+    function fillSampleParams(key) {
+      if (!SAMPLE_PARAMS[key]) return;
+      const params = SAMPLE_PARAMS[key];
+      Object.keys(params).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.value = params[id];
+          if (!state.params) state.params = {};
+          state.params[id] = params[id];
+        }
+      });
+      saveState();
+    }
+
+    function copyAnalysis(id) {
+      const el = document.getElementById(id);
+      if (!el || !el.value) return;
+      navigator.clipboard.writeText(el.value).then(() => {
+        alert("Teks analisis berhasil disalin ke clipboard!");
+      }).catch(() => {
+        el.select();
+        document.execCommand("copy");
+        alert("Teks analisis berhasil disalin!");
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function updateProgress() {
+      let total = 6;
+      let filled = 0;
+
+      // 1. Identitas
+      const idFilled = state.kelompok.trim() && state.members.some(m => (m.nim || '').trim() && (m.nama || '').trim());
+      if (idFilled) filled++;
+      updateCheckItem("chk-identitas", idFilled);
+
+      // 2. Sec 1
+      const sec1Filled = (state.images && (state.images.sec1_step2?.length || state.images.sec1_client_hello_img?.length)) || (state.analysis && state.analysis.sec1_analysis?.trim());
+      if (sec1Filled) filled++;
+      updateCheckItem("chk-sec1", sec1Filled);
+
+      // 3. Sec 2
+      const sec2Filled = (state.images && (state.images.sec2_step2?.length || state.images.sec2_client_hello_img?.length)) || (state.analysis && state.analysis.sec2_analysis?.trim());
+      if (sec2Filled) filled++;
+      updateCheckItem("chk-sec2", sec2Filled);
+
+      // 4. Sec 3
+      const sec3Filled = (state.images && (state.images.sec3_win_ip_img?.length || state.images.sec3_putty_img?.length)) || (state.analysis && state.analysis.sec3_analysis?.trim());
+      if (sec3Filled) filled++;
+      updateCheckItem("chk-sec3", sec3Filled);
+
+      // 5. Sec 4
+      const sec4Filled = (state.images && (state.images.sec4_ips_img?.length || state.images.sec4_tunnel_img?.length)) || (state.analysis && state.analysis.sec4_analysis?.trim());
+      if (sec4Filled) filled++;
+      updateCheckItem("chk-sec4", sec4Filled);
+
+      // 6. Sec 5
+      const sec5Filled = (state.images && state.images.sec5_apache_img?.length) || (state.analysis && state.analysis.sec5_analysis?.trim());
+      if (sec5Filled) filled++;
+      updateCheckItem("chk-sec5", sec5Filled);
+
+      const pct = Math.round((filled / total) * 100);
+      const bar = document.getElementById("prog-bar");
+      const label = document.getElementById("prog-label");
+      if (bar) bar.style.width = pct + "%";
+      if (label) label.innerText = `Progress: ${pct}% (${filled}/${total} bagian selesai)`;
+    }
+
+    function updateCheckItem(id, isDone) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = `<span class="checklist-icon">${isDone ? "✅" : "⚪"}</span> ${el.innerText.replace(/^[✅⚪]\s*/, "")}`;
+      el.style.color = isDone ? "var(--green)" : "#0c4a6e";
+    }
+
+    function resetAll() {
+      if (confirm("Apakah Anda yakin ingin mereset seluruh formulir? Data yang belum diunduh akan hilang.")) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    }
+
+    function startLiveClock() {
+      const el = document.getElementById("live-clock");
+      if (!el) return;
+      const update = () => {
+        const d = new Date();
+        el.innerText = `Waktu Sistem: ${d.toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} — ${d.toLocaleTimeString("id-ID")} WIB`;
+      };
+      update();
+      setInterval(update, 1000);
+    }
+
+    // ==========================================
+    // VECTOR-NATIVE PDF GENERATOR
+    // ==========================================
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+
+      const MARGIN_L = 18;
+      const MARGIN_R = 18;
+      const MARGIN_T = 18;
+      const MARGIN_B = 18;
+      const PAGE_W = 210;
+      const PAGE_H = 297;
+      const CONTENT_W = PAGE_W - MARGIN_L - MARGIN_R;
+
+      let y = MARGIN_T;
+      let pageNum = 1;
+
+      const newPage = () => {
+        doc.addPage();
+        pageNum++;
+        y = MARGIN_T;
+        drawPageHeader();
+      };
+
+      const ensureSpace = (needed) => {
+        if (y + needed > PAGE_H - MARGIN_B) {
+          newPage();
+        }
+      };
+
+      const drawPageHeader = () => {
+        if (pageNum === 1) return;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("STIK6063 Keamanan Jaringan — Laporan Praktikum CBL-1 (Transport-Level Security)", MARGIN_L, 11);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.line(MARGIN_L, 13, PAGE_W - MARGIN_R, 13);
+      };
+
+      const drawFooter = (num) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.line(MARGIN_L, PAGE_H - 12, PAGE_W - MARGIN_R, PAGE_H - 12);
+        doc.text("Departemen Teknik Elektro dan Komputer — Universitas Syiah Kuala", MARGIN_L, PAGE_H - 7);
+        doc.text(`Halaman ${num}`, PAGE_W - MARGIN_R, PAGE_H - 7, { align: "right" });
+      };
+
+      const drawSectionHeader = (title) => {
+        ensureSpace(14);
+        doc.setFillColor(13, 43, 85);
+        doc.rect(MARGIN_L, y, 3.5, 7.5, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.setTextColor(13, 43, 85);
+        doc.text(title, MARGIN_L + 6, y + 5.5);
+        y += 11;
+      };
+
+      const drawStepTitle = (numStr, text) => {
+        ensureSpace(10);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(22, 61, 115);
+        const lines = doc.splitTextToSize(`${numStr} ${text}`, CONTENT_W);
+        doc.text(lines, MARGIN_L, y);
+        y += lines.length * 4.2 + 2;
+      };
+
+      const drawParamsTable = (dataPairs) => {
+        if (!dataPairs || !dataPairs.length) return;
+        const valid = dataPairs.filter(p => p[1] && String(p[1]).trim());
+        if (!valid.length) return;
+
+        ensureSpace(14);
+        doc.autoTable({
+          startY: y,
+          margin: { left: MARGIN_L, right: MARGIN_R },
+          theme: 'grid',
+          styles: { font: 'helvetica', fontSize: 7.5, cellPadding: 2, overflow: 'linebreak' },
+          headStyles: { fillColor: [241, 245, 249], textColor: [30, 41, 59], fontStyle: 'bold', lineWidth: 0.2, lineColor: [203, 213, 225] },
+          bodyStyles: { textColor: [30, 41, 59], lineColor: [226, 232, 240], lineWidth: 0.2 },
+          columnStyles: {
+            0: { cellWidth: 55, fontStyle: 'bold', fillColor: [248, 250, 252] },
+            1: { cellWidth: 'auto' }
+          },
+          body: valid
+        });
+        y = doc.lastAutoTable.finalY + 4;
+      };
+
+      const drawImageBlock = (imgDataUrl, caption) => {
+        if (!imgDataUrl) return;
+        const imgH = 62;
+        ensureSpace(imgH + 10);
+
+        try {
+          // Draw bordered frame
+          doc.setDrawColor(203, 213, 225);
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(MARGIN_L, y, CONTENT_W, imgH, 2, 2, "FD");
+          doc.addImage(imgDataUrl, "JPEG", MARGIN_L + 2, y + 2, CONTENT_W - 4, imgH - 4, undefined, 'FAST');
+          y += imgH + 2;
+          if (caption) {
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(7.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(caption, MARGIN_L + 2, y + 2);
+            y += 5;
+          }
+        } catch (e) {
+          console.warn("Gagal merender gambar ke PDF", e);
+        }
+      };
+
+      const drawAnalysisBox = (text, title = "Analisis:") => {
+        if (!text || !text.trim()) return;
+        ensureSpace(20);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(13, 43, 85);
+        doc.text(title, MARGIN_L, y);
+        y += 4.5;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(30, 41, 59);
+
+        const lines = doc.splitTextToSize(text.trim(), CONTENT_W - 8);
+        const boxH = lines.length * 3.8 + 6;
+
+        ensureSpace(boxH);
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(MARGIN_L, y, CONTENT_W, boxH, 2, 2, "FD");
+
+        doc.text(lines, MARGIN_L + 4, y + 4.5);
+        y += boxH + 6;
+      };
+
+      // ==========================================
+      // PAGE 1: COVER & HEADER
+      // ==========================================
+      if (LOGO_USK_B64) {
+        try {
+          doc.addImage(LOGO_USK_B64, "PNG", MARGIN_L, y, 16, 20);
+        } catch (e) {}
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(13, 43, 85);
+      doc.text("LABORATORIUM JARINGAN KOMPUTER", MARGIN_L + 20, y + 5);
+      doc.setFontSize(9);
+      doc.setTextColor(71, 85, 105);
+      doc.text("Departemen Teknik Elektro dan Komputer — Fakultas Teknik Universitas Syiah Kuala", MARGIN_L + 20, y + 9.5);
+      doc.setFontSize(10.5);
+      doc.setTextColor(37, 99, 235);
+      doc.text("STIK6063 Keamanan Jaringan — CBL-1", MARGIN_L + 20, y + 14.5);
+
+      y += 24;
+      doc.setDrawColor(13, 43, 85);
+      doc.setLineWidth(0.8);
+      doc.line(MARGIN_L, y, PAGE_W - MARGIN_R, y);
+      y += 6;
+
+      // Report Title Banner
+      doc.setFillColor(241, 245, 249);
+      doc.roundedRect(MARGIN_L, y, CONTENT_W, 14, 2, 2, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(13, 43, 85);
+      doc.text("LAPORAN CBL-1: PENERAPAN DAN ANALISIS TRANSPORT-LEVEL SECURITY", PAGE_W / 2, y + 8.5, { align: "center" });
+      y += 18;
+
+      // Identity Table
+      const memberList = (state.members || []).filter(m => (m.nim || '').trim() || (m.nama || '').trim());
+      const memberStr = memberList.length
+        ? memberList.map((m, i) => `${i + 1}. ${m.nama || "-"} (${m.nim || "-"})`).join("\n")
+        : "-";
+
+      const identData = [
+        ["Mata Kuliah", "STIK6063 Keamanan Jaringan"],
+        ["Kelas / Kelompok", `${state.kelas || "Kelas 11"} / Kelompok ${state.kelompok || "-"}`],
+        ["Anggota Kelompok", memberStr],
+        ["Dosen Pengampu", state.dosen || "Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom"],
+        ["Tanggal Pengumpulan", new Date().toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })]
+      ];
+
+      doc.autoTable({
+        startY: y,
+        margin: { left: MARGIN_L, right: MARGIN_R },
+        theme: 'grid',
+        styles: { font: 'helvetica', fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 42, fontStyle: 'bold', fillColor: [248, 250, 252], textColor: [13, 43, 85] },
+          1: { cellWidth: 'auto', textColor: [30, 41, 59] }
+        },
+        body: identData
+      });
+      y = doc.lastAutoTable.finalY + 8;
+
+      // ==========================================
+      // SECTION 1: TLS 1.2
+      // ==========================================
+      drawSectionHeader("1. Transport Layer Security (TLS) Versi 1.2 — ami.usk.ac.id");
+
+      drawStepTitle("1.1.2 - 1.1.4", "Akses Website ami.usk.ac.id & Detail Header Network");
+      if (state.images.sec1_step2?.length) drawImageBlock(state.images.sec1_step2[0].dataUrl, "Screenshot Halaman Website ami.usk.ac.id");
+      if (state.images.sec1_step3?.length) drawImageBlock(state.images.sec1_step3[0].dataUrl, "Screenshot Tab Network Developer Tool");
+      if (state.images.sec1_step4?.length) drawImageBlock(state.images.sec1_step4[0].dataUrl, "Screenshot Detail Header Object");
+
+      drawStepTitle("1.1.6", "Pengamatan Trafik Wireshark ami.usk.ac.id");
+      if (state.images.sec1_step6?.length) drawImageBlock(state.images.sec1_step6[0].dataUrl, "Screenshot Wireshark Filter IP ami.usk.ac.id");
+
+      drawStepTitle("1.1.7", "Paket Client Hello (TLS 1.2)");
+      if (state.images.sec1_client_hello_img?.length) drawImageBlock(state.images.sec1_client_hello_img[0].dataUrl, "Screenshot Paket Client Hello");
+      drawParamsTable([
+        ["Handshake Type", state.params.sec1_ch_type],
+        ["Length & Version", `${state.params.sec1_ch_len || ""} | ${state.params.sec1_ch_ver || ""}`],
+        ["Random (gmt_unix_time)", state.params.sec1_ch_time],
+        ["Random (random_bytes)", state.params.sec1_ch_rnd],
+        ["Session ID", state.params.sec1_ch_sess],
+        ["Cipher Suites", state.params.sec1_ch_cs3],
+        ["Extensions", `server_name: ${state.params.sec1_ch_ext_sni || "-"} | elliptic_curves: ${state.params.sec1_ch_ext_ec || "-"} | signature_algorithms: ${state.params.sec1_ch_ext_sig || "-"}`]
+      ]);
+
+      drawStepTitle("1.1.8", "Paket Server Hello (TLS 1.2)");
+      if (state.images.sec1_server_hello_img?.length) drawImageBlock(state.images.sec1_server_hello_img[0].dataUrl, "Screenshot Paket Server Hello");
+      drawParamsTable([
+        ["Handshake Type", state.params.sec1_sh_type],
+        ["Length & Version", `${state.params.sec1_sh_len || ""} | ${state.params.sec1_sh_ver || ""}`],
+        ["Random Server", `${state.params.sec1_sh_time || ""} | ${state.params.sec1_sh_rnd || ""}`],
+        ["Cipher Suite Disepakati", state.params.sec1_sh_cs],
+        ["Compression Method", state.params.sec1_sh_comp]
+      ]);
+
+      drawStepTitle("1.1.9 - 1.1.10", "Certificate, Server/Client Key Exchange, & Change Cipher Spec");
+      if (state.images.sec1_cert_img?.length) drawImageBlock(state.images.sec1_cert_img[0].dataUrl, "Screenshot Certificate & Server Key Exchange");
+      if (state.images.sec1_cke_img?.length) drawImageBlock(state.images.sec1_cke_img[0].dataUrl, "Screenshot Client Key Exchange & Change Cipher Spec");
+      drawParamsTable([
+        ["Certificate Subject", `CN=${state.params.sec1_cert_cn || "-"}, O=${state.params.sec1_cert_org || "-"}, C=${state.params.sec1_cert_country || "-"}`],
+        ["Subject Alt Names (SAN)", state.params.sec1_cert_san],
+        ["Server ECDH Params", `Curve: ${state.params.sec1_ske_curve || "-"} | Pubkey: ${state.params.sec1_ske_pubkey || "-"}`],
+        ["Server Signature", state.params.sec1_ske_sig],
+        ["Client ECDH Pubkey", state.params.sec1_cke_pubkey],
+        ["Change Cipher Spec", state.params.sec1_ccs_info],
+        ["Encrypted Handshake", state.params.sec1_ehm_info]
+      ]);
+
+      drawAnalysisBox(state.analysis.sec1_analysis, "1.2 Analisis Penerapan Protokol TLS 1.2 pada ami.usk.ac.id:");
+
+      // ==========================================
+      // SECTION 2: TLS 1.3
+      // ==========================================
+      drawSectionHeader("2. Transport Layer Security (TLS) Versi 1.3 — komputer.ft.usk.ac.id");
+
+      drawStepTitle("2.1.2 - 2.1.6", "Akses Website & Pengamatan Wireshark komputer.ft.usk.ac.id");
+      if (state.images.sec2_step2?.length) drawImageBlock(state.images.sec2_step2[0].dataUrl, "Screenshot Website komputer.ft.usk.ac.id");
+      if (state.images.sec2_step4?.length) drawImageBlock(state.images.sec2_step4[0].dataUrl, "Screenshot Detail Header Object");
+      if (state.images.sec2_step6?.length) drawImageBlock(state.images.sec2_step6[0].dataUrl, "Screenshot Wireshark Trafik TLS 1.3");
+
+      drawStepTitle("2.1.7", "Paket Client Hello (TLS 1.3)");
+      if (state.images.sec2_client_hello_img?.length) drawImageBlock(state.images.sec2_client_hello_img[0].dataUrl, "Screenshot Client Hello TLS 1.3");
+      drawParamsTable([
+        ["Handshake Type & Length", `${state.params.sec2_ch_type || ""} | ${state.params.sec2_ch_len_ver || ""}`],
+        ["Cipher Suites (TLS 1.3)", state.params.sec2_ch_cs3],
+        ["Extension server_name", state.params.sec2_ch_ext_sni],
+        ["Extension key_share", state.params.sec2_ch_ext_keyshare],
+        ["Extension supported_versions", state.params.sec2_ch_ext_ver],
+        ["Extension supported_groups", state.params.sec2_ch_ext_groups]
+      ]);
+
+      drawStepTitle("2.1.8 - 2.1.9", "Server Hello, Change Cipher Spec, & Application Data");
+      if (state.images.sec2_server_hello_img?.length) drawImageBlock(state.images.sec2_server_hello_img[0].dataUrl, "Screenshot Server Hello & Encrypted Data");
+      if (state.images.sec2_client_appdata_img?.length) drawImageBlock(state.images.sec2_client_appdata_img[0].dataUrl, "Screenshot Change Cipher Spec & Application Data");
+      drawParamsTable([
+        ["Server Hello Type & Length", state.params.sec2_sh_type_len],
+        ["Cipher Suite Terpilih", state.params.sec2_sh_cs],
+        ["Server key_share", state.params.sec2_sh_keyshare],
+        ["supported_version Server", state.params.sec2_sh_ext_ver],
+        ["Change Cipher Spec", state.params.sec2_ccs_info],
+        ["Encrypted Application Data", state.params.sec2_appdata_info]
+      ]);
+
+      drawAnalysisBox(state.analysis.sec2_analysis, "2.2 Analisis Penerapan Protokol TLS 1.3 pada komputer.ft.usk.ac.id:");
+
+      // ==========================================
+      // SECTION 3: SSHv2
+      // ==========================================
+      drawSectionHeader("3. Secure Shell Versi 2 (SSHv2) — Ubuntu Server & Windows Client");
+
+      drawStepTitle("3.1.2 - 3.1.8", "Identitas IP & Koneksi SSH Client (Putty)");
+      if (state.images.sec3_win_ip_img?.length) drawImageBlock(state.images.sec3_win_ip_img[0].dataUrl, "Screenshot IP Host Windows");
+      if (state.images.sec3_ubuntu_ip_img?.length) drawImageBlock(state.images.sec3_ubuntu_ip_img[0].dataUrl, "Screenshot IP Host Ubuntu");
+      if (state.images.sec3_putty_img?.length) drawImageBlock(state.images.sec3_putty_img[0].dataUrl, "Screenshot Putty Konfigurasi & Terminal Login");
+      drawParamsTable([
+        ["IP Address Windows", state.params.sec3_win_ip || document.getElementById("sec3_win_ip")?.value],
+        ["IP Address Ubuntu", state.params.sec3_ubuntu_ip || document.getElementById("sec3_ubuntu_ip")?.value],
+        ["String Identifikasi Server", state.params.sec3_ident_server || document.getElementById("sec3_ident_server")?.value],
+        ["String Identifikasi Client", state.params.sec3_ident_client || document.getElementById("sec3_ident_client")?.value]
+      ]);
+
+      drawStepTitle("3.1.11 - 3.1.14", "Key Exchange Init & ECDH Key Exchange");
+      if (state.images.sec3_kex_init_img?.length) drawImageBlock(state.images.sec3_kex_init_img[0].dataUrl, "Screenshot Key Exchange Init");
+      if (state.images.sec3_ecdh_img?.length) drawImageBlock(state.images.sec3_ecdh_img[0].dataUrl, "Screenshot ECDH Key Exchange Init & Reply");
+      drawParamsTable([
+        ["Server kex_algorithms", state.params.sec3_srv_kex],
+        ["Server host_key_algorithms", state.params.sec3_srv_hostkey],
+        ["Server enc_c2s / enc_s2c", `${state.params.sec3_srv_enc_c2s || ""} / ${state.params.sec3_srv_enc_s2c || ""}`],
+        ["Client kex_algorithms", state.params.sec3_cli_kex],
+        ["Client enc_c2s / enc_s2c", `${state.params.sec3_cli_enc_c2s || ""} / ${state.params.sec3_cli_enc_s2c || ""}`],
+        ["Client ECDH Pubkey (Q_C)", state.params.sec3_cli_ecdh_key],
+        ["Server ECDH Pubkey (Q_S)", state.params.sec3_srv_ecdh_key]
+      ]);
+
+      drawAnalysisBox(state.analysis.sec3_analysis, "3.2 Analisis Penerapan SSHv2 Server pada Ubuntu dan SSHv2 Client pada Windows:");
+
+      // ==========================================
+      // SECTION 4: SSH TUNNELING
+      // ==========================================
+      drawSectionHeader("4. SSH Tunneling — Mengamankan Trafik HTTP");
+
+      drawStepTitle("4.1.2 - 4.1.8", "Akses HTTP Polos (Unencrypted) & Wireshark Plaintext");
+      if (state.images.sec4_ips_img?.length) drawImageBlock(state.images.sec4_ips_img[0].dataUrl, "Screenshot IP Host Windows & Ubuntu");
+      if (state.images.sec4_plain_http_img?.length) drawImageBlock(state.images.sec4_plain_http_img[0].dataUrl, "Screenshot Akses Web HTTP & Wireshark Plaintext");
+      drawParamsTable([
+        ["IP Address Windows", state.params.sec4_win_ip || document.getElementById("sec4_win_ip")?.value],
+        ["IP Address Ubuntu", state.params.sec4_ubuntu_ip || document.getElementById("sec4_ubuntu_ip")?.value]
+      ]);
+
+      drawStepTitle("4.1.9 - 4.1.12", "Konfigurasi SSH Tunnel (L8080) & Verifikasi Trafik Terenkripsi");
+      if (state.images.sec4_tunnel_img?.length) drawImageBlock(state.images.sec4_tunnel_img[0].dataUrl, "Screenshot SSH Tunneling & Wireshark SSH Encrypted");
+
+      drawAnalysisBox(state.analysis.sec4_analysis, "4.2 Analisis Penerapan SSH Tunneling untuk Mengamankan Trafik HTTP:");
+
+      // ==========================================
+      // SECTION 5: TLS 1.3 PADA APACHE
+      // ==========================================
+      drawSectionHeader("5. TLS v1.3 pada Web Server Apache");
+
+      drawStepTitle("5.1", "Langkah Penerapan TLS v1.3 pada Apache & Bukti Screenshot");
+      if (state.images.sec5_apache_img?.length) {
+        state.images.sec5_apache_img.forEach((im, i) => {
+          drawImageBlock(im.dataUrl, `Screenshot Bukti Penerapan TLS 1.3 Apache (${i + 1})`);
+        });
+      }
+
+      drawAnalysisBox(state.analysis.sec5_steps, "Langkah-langkah Konfigurasi Apache TLS 1.3:");
+      drawAnalysisBox(state.analysis.sec5_analysis, "5.2 Analisis Penerapan TLS v1.3 pada Web Server Apache:");
+
+      // ==========================================
+      // DRAW ALL FOOTERS
+      // ==========================================
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        drawFooter(p);
+      }
+
+      const kelClean = (state.kelompok || "01").replace(/[^0-9]/g, "") || "01";
+      doc.save(`CBL1-Kelas11-Kelompok${kelClean}-Keamanan-Jaringan.pdf`);
+    }
+  </script>
+
+</body>
+</html>
