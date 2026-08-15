@@ -2335,8 +2335,8 @@
       if (!state.images[field]) state.images[field] = [];
 
       Array.from(files).forEach(file => {
-        compressImage(file, 1600, 0.82, (dataUrl) => {
-          state.images[field].push({ dataUrl, name: file.name });
+        compressImage(file, 1600, 0.85, (dataUrl, width, height) => {
+          state.images[field].push({ dataUrl, name: file.name, width, height });
           renderThumbs(field, thumbsEl);
           saveState();
         });
@@ -2359,7 +2359,7 @@
           canvas.height = h;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, w, h);
-          callback(canvas.toDataURL("image/jpeg", quality));
+          callback(canvas.toDataURL("image/jpeg", quality), w, h);
         };
         img.src = e.target.result;
       };
@@ -2617,27 +2617,64 @@
         y = doc.lastAutoTable.finalY + 4;
       };
 
-      const drawImageBlock = (imgDataUrl, caption) => {
-        if (!imgDataUrl) return;
-        const imgH = 62;
-        ensureSpace(imgH + 10);
+      const drawImageBlock = (imgItem, caption) => {
+        const dataUrl = (typeof imgItem === 'string') ? imgItem : imgItem?.dataUrl;
+        if (!dataUrl) return;
+
+        let iw = 1200;
+        let ih = 800;
 
         try {
-          // Draw bordered frame
-          doc.setDrawColor(203, 213, 225);
-          doc.setFillColor(248, 250, 252);
-          doc.roundedRect(MARGIN_L, y, CONTENT_W, imgH, 2, 2, "FD");
-          doc.addImage(imgDataUrl, "JPEG", MARGIN_L + 2, y + 2, CONTENT_W - 4, imgH - 4, undefined, 'FAST');
-          y += imgH + 2;
-          if (caption) {
-            doc.setFont("helvetica", "italic");
-            doc.setFontSize(7.5);
-            doc.setTextColor(100, 116, 139);
-            doc.text(caption, MARGIN_L + 2, y + 2);
-            y += 5;
+          const props = doc.getImageProperties(dataUrl);
+          if (props && props.width && props.height) {
+            iw = props.width;
+            ih = props.height;
+          } else if (imgItem?.width && imgItem?.height) {
+            iw = imgItem.width;
+            ih = imgItem.height;
           }
         } catch (e) {
-          console.warn("Gagal merender gambar ke PDF", e);
+          if (imgItem?.width && imgItem?.height) {
+            iw = imgItem.width;
+            ih = imgItem.height;
+          }
+        }
+
+        const maxW = CONTENT_W;
+        const maxH = 95; // max 95mm height in PDF to preserve proportions perfectly
+        let drawW = maxW;
+        let drawH = drawW * (ih / iw);
+
+        if (drawH > maxH) {
+          drawH = maxH;
+          drawW = drawH * (iw / ih);
+        }
+
+        ensureSpace(drawH + 10);
+        const x = MARGIN_L + (CONTENT_W - drawW) / 2;
+
+        try {
+          doc.addImage(dataUrl, 'JPEG', x, y, drawW, drawH, undefined, 'FAST');
+          doc.setDrawColor(203, 213, 225);
+          doc.setLineWidth(0.3);
+          doc.rect(x, y, drawW, drawH);
+          y += drawH + 2;
+
+          if (caption && caption.trim()) {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(100, 116, 139);
+            const lines = doc.splitTextToSize(caption.trim(), CONTENT_W);
+            lines.forEach((l, i) => {
+              doc.text(l, PAGE_W / 2, y + 2 + i * 3.5, { align: 'center' });
+            });
+            y += lines.length * 3.5 + 4;
+            doc.setTextColor(30, 41, 59);
+          } else {
+            y += 4;
+          }
+        } catch (e) {
+          console.warn('Gagal merender gambar ke PDF', e);
         }
       };
 
@@ -2672,22 +2709,23 @@
       // ==========================================
       if (LOGO_USK_B64) {
         try {
-          doc.addImage(LOGO_USK_B64, "PNG", MARGIN_L, y, 16, 20);
+          // Logo USK natural aspect ratio ~2.17:1 (width 32mm, height 14.7mm)
+          doc.addImage(LOGO_USK_B64, "PNG", MARGIN_L, y, 32, 14.7);
         } catch (e) {}
       }
 
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(13, 43, 85);
-      doc.text("LABORATORIUM JARINGAN KOMPUTER", MARGIN_L + 20, y + 5);
-      doc.setFontSize(9);
-      doc.setTextColor(71, 85, 105);
-      doc.text("Departemen Teknik Elektro dan Komputer — Fakultas Teknik Universitas Syiah Kuala", MARGIN_L + 20, y + 9.5);
       doc.setFontSize(10.5);
+      doc.setTextColor(13, 43, 85);
+      doc.text("LABORATORIUM JARINGAN KOMPUTER", MARGIN_L + 35, y + 4.5);
+      doc.setFontSize(8.5);
+      doc.setTextColor(71, 85, 105);
+      doc.text("Departemen Teknik Elektro dan Komputer — Fakultas Teknik Universitas Syiah Kuala", MARGIN_L + 35, y + 9);
+      doc.setFontSize(10);
       doc.setTextColor(37, 99, 235);
-      doc.text("STIK6063 Keamanan Jaringan — CBL-1", MARGIN_L + 20, y + 14.5);
+      doc.text("STIK6063 Keamanan Jaringan — CBL-1", MARGIN_L + 35, y + 14);
 
-      y += 24;
+      y += 20;
       doc.setDrawColor(13, 43, 85);
       doc.setLineWidth(0.8);
       doc.line(MARGIN_L, y, PAGE_W - MARGIN_R, y);
@@ -2735,15 +2773,25 @@
       drawSectionHeader("1. Transport Layer Security (TLS) Versi 1.2 — ami.usk.ac.id");
 
       drawStepTitle("1.1.2 - 1.1.4", "Akses Website ami.usk.ac.id & Detail Header Network");
-      if (state.images.sec1_step2?.length) drawImageBlock(state.images.sec1_step2[0].dataUrl, "Screenshot Halaman Website ami.usk.ac.id");
-      if (state.images.sec1_step3?.length) drawImageBlock(state.images.sec1_step3[0].dataUrl, "Screenshot Tab Network Developer Tool");
-      if (state.images.sec1_step4?.length) drawImageBlock(state.images.sec1_step4[0].dataUrl, "Screenshot Detail Header Object");
+      if (state.images.sec1_step2?.length) {
+        state.images.sec1_step2.forEach(im => drawImageBlock(im, "Screenshot Halaman Website ami.usk.ac.id"));
+      }
+      if (state.images.sec1_step3?.length) {
+        state.images.sec1_step3.forEach(im => drawImageBlock(im, "Screenshot Tab Network Developer Tool"));
+      }
+      if (state.images.sec1_step4?.length) {
+        state.images.sec1_step4.forEach(im => drawImageBlock(im, "Screenshot Detail Header Object"));
+      }
 
       drawStepTitle("1.1.6", "Pengamatan Trafik Wireshark ami.usk.ac.id");
-      if (state.images.sec1_step6?.length) drawImageBlock(state.images.sec1_step6[0].dataUrl, "Screenshot Wireshark Filter IP ami.usk.ac.id");
+      if (state.images.sec1_step6?.length) {
+        state.images.sec1_step6.forEach(im => drawImageBlock(im, "Screenshot Wireshark Filter IP ami.usk.ac.id"));
+      }
 
       drawStepTitle("1.1.7", "Paket Client Hello (TLS 1.2)");
-      if (state.images.sec1_client_hello_img?.length) drawImageBlock(state.images.sec1_client_hello_img[0].dataUrl, "Screenshot Paket Client Hello");
+      if (state.images.sec1_client_hello_img?.length) {
+        state.images.sec1_client_hello_img.forEach(im => drawImageBlock(im, "Screenshot Paket Client Hello"));
+      }
       drawParamsTable([
         ["Handshake Type", state.params.sec1_ch_type],
         ["Length & Version", `${state.params.sec1_ch_len || ""} | ${state.params.sec1_ch_ver || ""}`],
@@ -2755,7 +2803,9 @@
       ]);
 
       drawStepTitle("1.1.8", "Paket Server Hello (TLS 1.2)");
-      if (state.images.sec1_server_hello_img?.length) drawImageBlock(state.images.sec1_server_hello_img[0].dataUrl, "Screenshot Paket Server Hello");
+      if (state.images.sec1_server_hello_img?.length) {
+        state.images.sec1_server_hello_img.forEach(im => drawImageBlock(im, "Screenshot Paket Server Hello"));
+      }
       drawParamsTable([
         ["Handshake Type", state.params.sec1_sh_type],
         ["Length & Version", `${state.params.sec1_sh_len || ""} | ${state.params.sec1_sh_ver || ""}`],
@@ -2765,8 +2815,12 @@
       ]);
 
       drawStepTitle("1.1.9 - 1.1.10", "Certificate, Server/Client Key Exchange, & Change Cipher Spec");
-      if (state.images.sec1_cert_img?.length) drawImageBlock(state.images.sec1_cert_img[0].dataUrl, "Screenshot Certificate & Server Key Exchange");
-      if (state.images.sec1_cke_img?.length) drawImageBlock(state.images.sec1_cke_img[0].dataUrl, "Screenshot Client Key Exchange & Change Cipher Spec");
+      if (state.images.sec1_cert_img?.length) {
+        state.images.sec1_cert_img.forEach(im => drawImageBlock(im, "Screenshot Certificate & Server Key Exchange"));
+      }
+      if (state.images.sec1_cke_img?.length) {
+        state.images.sec1_cke_img.forEach(im => drawImageBlock(im, "Screenshot Client Key Exchange & Change Cipher Spec"));
+      }
       drawParamsTable([
         ["Certificate Subject", `CN=${state.params.sec1_cert_cn || "-"}, O=${state.params.sec1_cert_org || "-"}, C=${state.params.sec1_cert_country || "-"}`],
         ["Subject Alt Names (SAN)", state.params.sec1_cert_san],
@@ -2785,12 +2839,20 @@
       drawSectionHeader("2. Transport Layer Security (TLS) Versi 1.3 — komputer.ft.usk.ac.id");
 
       drawStepTitle("2.1.2 - 2.1.6", "Akses Website & Pengamatan Wireshark komputer.ft.usk.ac.id");
-      if (state.images.sec2_step2?.length) drawImageBlock(state.images.sec2_step2[0].dataUrl, "Screenshot Website komputer.ft.usk.ac.id");
-      if (state.images.sec2_step4?.length) drawImageBlock(state.images.sec2_step4[0].dataUrl, "Screenshot Detail Header Object");
-      if (state.images.sec2_step6?.length) drawImageBlock(state.images.sec2_step6[0].dataUrl, "Screenshot Wireshark Trafik TLS 1.3");
+      if (state.images.sec2_step2?.length) {
+        state.images.sec2_step2.forEach(im => drawImageBlock(im, "Screenshot Website komputer.ft.usk.ac.id"));
+      }
+      if (state.images.sec2_step4?.length) {
+        state.images.sec2_step4.forEach(im => drawImageBlock(im, "Screenshot Detail Header Object"));
+      }
+      if (state.images.sec2_step6?.length) {
+        state.images.sec2_step6.forEach(im => drawImageBlock(im, "Screenshot Wireshark Trafik TLS 1.3"));
+      }
 
       drawStepTitle("2.1.7", "Paket Client Hello (TLS 1.3)");
-      if (state.images.sec2_client_hello_img?.length) drawImageBlock(state.images.sec2_client_hello_img[0].dataUrl, "Screenshot Client Hello TLS 1.3");
+      if (state.images.sec2_client_hello_img?.length) {
+        state.images.sec2_client_hello_img.forEach(im => drawImageBlock(im, "Screenshot Client Hello TLS 1.3"));
+      }
       drawParamsTable([
         ["Handshake Type & Length", `${state.params.sec2_ch_type || ""} | ${state.params.sec2_ch_len_ver || ""}`],
         ["Cipher Suites (TLS 1.3)", state.params.sec2_ch_cs3],
@@ -2801,8 +2863,12 @@
       ]);
 
       drawStepTitle("2.1.8 - 2.1.9", "Server Hello, Change Cipher Spec, & Application Data");
-      if (state.images.sec2_server_hello_img?.length) drawImageBlock(state.images.sec2_server_hello_img[0].dataUrl, "Screenshot Server Hello & Encrypted Data");
-      if (state.images.sec2_client_appdata_img?.length) drawImageBlock(state.images.sec2_client_appdata_img[0].dataUrl, "Screenshot Change Cipher Spec & Application Data");
+      if (state.images.sec2_server_hello_img?.length) {
+        state.images.sec2_server_hello_img.forEach(im => drawImageBlock(im, "Screenshot Server Hello & Encrypted Data"));
+      }
+      if (state.images.sec2_client_appdata_img?.length) {
+        state.images.sec2_client_appdata_img.forEach(im => drawImageBlock(im, "Screenshot Change Cipher Spec & Application Data"));
+      }
       drawParamsTable([
         ["Server Hello Type & Length", state.params.sec2_sh_type_len],
         ["Cipher Suite Terpilih", state.params.sec2_sh_cs],
@@ -2820,9 +2886,15 @@
       drawSectionHeader("3. Secure Shell Versi 2 (SSHv2) — Ubuntu Server & Windows Client");
 
       drawStepTitle("3.1.2 - 3.1.8", "Identitas IP & Koneksi SSH Client (Putty)");
-      if (state.images.sec3_win_ip_img?.length) drawImageBlock(state.images.sec3_win_ip_img[0].dataUrl, "Screenshot IP Host Windows");
-      if (state.images.sec3_ubuntu_ip_img?.length) drawImageBlock(state.images.sec3_ubuntu_ip_img[0].dataUrl, "Screenshot IP Host Ubuntu");
-      if (state.images.sec3_putty_img?.length) drawImageBlock(state.images.sec3_putty_img[0].dataUrl, "Screenshot Putty Konfigurasi & Terminal Login");
+      if (state.images.sec3_win_ip_img?.length) {
+        state.images.sec3_win_ip_img.forEach(im => drawImageBlock(im, "Screenshot IP Host Windows"));
+      }
+      if (state.images.sec3_ubuntu_ip_img?.length) {
+        state.images.sec3_ubuntu_ip_img.forEach(im => drawImageBlock(im, "Screenshot IP Host Ubuntu"));
+      }
+      if (state.images.sec3_putty_img?.length) {
+        state.images.sec3_putty_img.forEach(im => drawImageBlock(im, "Screenshot Putty Konfigurasi & Terminal Login"));
+      }
       drawParamsTable([
         ["IP Address Windows", state.params.sec3_win_ip || document.getElementById("sec3_win_ip")?.value],
         ["IP Address Ubuntu", state.params.sec3_ubuntu_ip || document.getElementById("sec3_ubuntu_ip")?.value],
@@ -2831,8 +2903,12 @@
       ]);
 
       drawStepTitle("3.1.11 - 3.1.14", "Key Exchange Init & ECDH Key Exchange");
-      if (state.images.sec3_kex_init_img?.length) drawImageBlock(state.images.sec3_kex_init_img[0].dataUrl, "Screenshot Key Exchange Init");
-      if (state.images.sec3_ecdh_img?.length) drawImageBlock(state.images.sec3_ecdh_img[0].dataUrl, "Screenshot ECDH Key Exchange Init & Reply");
+      if (state.images.sec3_kex_init_img?.length) {
+        state.images.sec3_kex_init_img.forEach(im => drawImageBlock(im, "Screenshot Key Exchange Init"));
+      }
+      if (state.images.sec3_ecdh_img?.length) {
+        state.images.sec3_ecdh_img.forEach(im => drawImageBlock(im, "Screenshot ECDH Key Exchange Init & Reply"));
+      }
       drawParamsTable([
         ["Server kex_algorithms", state.params.sec3_srv_kex],
         ["Server host_key_algorithms", state.params.sec3_srv_hostkey],
@@ -2851,15 +2927,21 @@
       drawSectionHeader("4. SSH Tunneling — Mengamankan Trafik HTTP");
 
       drawStepTitle("4.1.2 - 4.1.8", "Akses HTTP Polos (Unencrypted) & Wireshark Plaintext");
-      if (state.images.sec4_ips_img?.length) drawImageBlock(state.images.sec4_ips_img[0].dataUrl, "Screenshot IP Host Windows & Ubuntu");
-      if (state.images.sec4_plain_http_img?.length) drawImageBlock(state.images.sec4_plain_http_img[0].dataUrl, "Screenshot Akses Web HTTP & Wireshark Plaintext");
+      if (state.images.sec4_ips_img?.length) {
+        state.images.sec4_ips_img.forEach(im => drawImageBlock(im, "Screenshot IP Host Windows & Ubuntu"));
+      }
+      if (state.images.sec4_plain_http_img?.length) {
+        state.images.sec4_plain_http_img.forEach(im => drawImageBlock(im, "Screenshot Akses Web HTTP & Wireshark Plaintext"));
+      }
       drawParamsTable([
         ["IP Address Windows", state.params.sec4_win_ip || document.getElementById("sec4_win_ip")?.value],
         ["IP Address Ubuntu", state.params.sec4_ubuntu_ip || document.getElementById("sec4_ubuntu_ip")?.value]
       ]);
 
       drawStepTitle("4.1.9 - 4.1.12", "Konfigurasi SSH Tunnel (L8080) & Verifikasi Trafik Terenkripsi");
-      if (state.images.sec4_tunnel_img?.length) drawImageBlock(state.images.sec4_tunnel_img[0].dataUrl, "Screenshot SSH Tunneling & Wireshark SSH Encrypted");
+      if (state.images.sec4_tunnel_img?.length) {
+        state.images.sec4_tunnel_img.forEach(im => drawImageBlock(im, "Screenshot SSH Tunneling & Wireshark SSH Encrypted"));
+      }
 
       drawAnalysisBox(state.analysis.sec4_analysis, "4.2 Analisis Penerapan SSH Tunneling untuk Mengamankan Trafik HTTP:");
 
@@ -2871,7 +2953,7 @@
       drawStepTitle("5.1", "Langkah Penerapan TLS v1.3 pada Apache & Bukti Screenshot");
       if (state.images.sec5_apache_img?.length) {
         state.images.sec5_apache_img.forEach((im, i) => {
-          drawImageBlock(im.dataUrl, `Screenshot Bukti Penerapan TLS 1.3 Apache (${i + 1})`);
+          drawImageBlock(im, `Screenshot Bukti Penerapan TLS 1.3 Apache (${i + 1})`);
         });
       }
 
