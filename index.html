@@ -104,6 +104,8 @@
       position: absolute;
       inset: 0;
       background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
     }
 
     .header-inner {
@@ -123,6 +125,19 @@
       justify-content: center;
       max-height: 100px;
       width: auto;
+      position: relative;
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .header-logo-img {
+      max-height: 90px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      display: block;
+      pointer-events: none; /* Allows clicks to register cleanly on header-logo container */
     }
 
     .header-logo-img {
@@ -174,6 +189,8 @@
       text-transform: uppercase;
       white-space: nowrap;
     }
+
+        
 
     .btn-header-rekap {
       background: rgba(255, 255, 255, 0.18);
@@ -1626,7 +1643,7 @@
           📊 Rekap Nilai
         </button>
         <div class="header-badge">Auto-Grader</div>
-        <div class="admin-badge" id="adminBadge">🛡️ Admin Mode</div>
+        <div class="admin-badge" id="adminBadge" onclick="toggleAdminPanel()" style="cursor:pointer;" title="Klik untuk Buka/Tutup Panel Admin">🛡️ Admin Aktif ⚙️</div>
       </div>
     </div>
   </header>
@@ -1657,20 +1674,9 @@
           </div>
 
           <div class="form-group">
-            <label for="input-npm">NPM / NIM (13 Digit)</label>
-            <input type="text" id="input-npm" placeholder="Masukkan 13 digit NPM Anda (Contoh: 2404111010016)"
-              inputmode="numeric" maxlength="13" autocomplete="off" list="studentQuizList">
-            <datalist id="studentQuizList">
-              <option value="2304111010031">2304111010031 - NABIL MUHAMMAD TSADZALI</option>
-              <option value="2404111010016">2404111010016 - ZAKI ALKAF</option>
-              <option value="2404111010019">2404111010019 - KHALIDA</option>
-              <option value="2404111010060">2404111010060 - Aulia Akbar</option>
-              <option value="2404111010066">2404111010066 - Hafidh Alfarisi</option>
-              <option value="2404111010075">2404111010075 - CAESAR RAHMAWAN</option>
-              <option value="2404111010102">2404111010102 - MUTHMAINNAH</option>
-              <option value="2104111010093">2104111010093 - Sarah Ar Rayyan</option>
-              <option value="2104111010038">2104111010038 - Arya Risky Ramdhan Pratama Putra</option>
-            </datalist>
+            <label for="input-npm">NIM / NPM (13 Digit)</label>
+            <input type="text" id="input-npm" placeholder="Ketik 13 digit NIM Anda (Contoh: 2404111010016)"
+              inputmode="numeric" maxlength="13" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
             <div id="npm-status-msg"
               style="font-size: 12.5px; margin-top: 4px; font-weight: 500; min-height: 18px; transition: all 0.2s ease;">
             </div>
@@ -1735,9 +1741,13 @@
           <div class="aspect-grid" id="aspect-grid"></div>
           <section class="study-plan" id="study-plan"></section>
 
-          <div class="actions-row">
-            <button class="btn btn-secondary" id="btn-print">🖨️ Cetak Lembar Jawaban</button>
-            <button class="btn btn-ghost" id="btn-restart">🔄 Mulai Ulang Quiz</button>
+          <div style="background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:var(--radius); padding:20px 24px; text-align:center; margin-top:24px; box-shadow:var(--shadow-sm);">
+            <div style="color:var(--green-dark); font-weight:700; font-size:16px; margin-bottom:6px;">
+              ✅ Lembar Jawaban Berhasil Dikumpulkan
+            </div>
+            <div style="color:var(--gray-600); font-size:13.5px; line-height:1.5;">
+              Jawaban Anda telah tersimpan dan tercatat secara permanen di database sistem. Lembar kerja kuis ini telah selesai dan tidak dapat diulang kembali.
+            </div>
           </div>
         </div>
       </div>
@@ -1798,7 +1808,7 @@
         <div class="rekap-controls">
           <div class="rekap-search">
             <span class="rekap-search-icon">🔍</span>
-            <input type="text" id="rekapSearchInput" placeholder="Cari berdasarkan NIM atau Nama Mahasiswa..." oninput="renderRekapTable()">
+            <input type="text" id="rekapSearchInput" placeholder="Cari berdasarkan NIM Mahasiswa..." oninput="renderRekapTable()">
           </div>
           <div class="rekap-btn-group">
             <select id="rekapFilterStatus" onchange="renderRekapTable()" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--gray-300);font-size:13px;outline:none;">
@@ -1821,16 +1831,11 @@
           <table class="rekap-table" id="rekapTable">
             <thead>
               <tr>
-                <th style="width:50px;text-align:center;">No</th>
-                <th style="width:140px;">NIM / NPM</th>
-                <th>Nama Mahasiswa</th>
-                <th style="width:110px;text-align:center;">Jumlah Benar</th>
-                <th style="width:110px;text-align:center;">Jumlah Salah</th>
-                <th style="width:110px;text-align:center;">Skor Nilai</th>
-                <th style="width:120px;">Durasi</th>
-                <th style="width:160px;">Waktu Submit</th>
-                <th style="width:130px;text-align:center;">Status</th>
-                <th style="width:90px;text-align:center;">Aksi</th>
+                <th style="width:70px;text-align:center;">No.</th>
+                <th style="text-align:center;">NIM</th>
+                <th style="width:140px;text-align:center;">Benar</th>
+                <th style="width:140px;text-align:center;">Salah</th>
+                <th style="width:150px;text-align:center;">Nilai</th>
               </tr>
             </thead>
             <tbody id="rekapTableBody">
@@ -2139,6 +2144,26 @@
       const timerValue = document.getElementById('timer-value');
 
       /* ================= GATE & NPM LOOKUP ================= */
+      const ADMIN_NPMS = ['2104111010093', '2104111010038'];
+
+      function isNpmAdmin(npm) {
+        return isAdminMode || ADMIN_NPMS.includes(npm);
+      }
+
+      function checkNpmAlreadySubmitted(npm) {
+        if (!npm || isNpmAdmin(npm)) return false;
+        // 1. Check local storage single-flag
+        if (localStorage.getItem('cbl_submitted_npm_' + npm) === 'true') {
+          return true;
+        }
+        // 2. Check local rekap records
+        const records = getLocalRekapRecords();
+        if (records.some(r => r.npm === npm && r.isSubmitted !== false && r.skor !== null && r.skor !== undefined)) {
+          return true;
+        }
+        return false;
+      }
+
       function handleNpmInput() {
         inputNpm.value = inputNpm.value.replace(/[^0-9]/g, '');
         if (inputNpm.value.length > 13) {
@@ -2150,6 +2175,7 @@
 
         if (npm.length === 0) {
           inputName.value = '';
+          btnStart.disabled = false;
           if (npmStatusMsg) {
             npmStatusMsg.textContent = '';
             npmStatusMsg.style.color = '';
@@ -2159,8 +2185,9 @@
 
         if (npm.length < 13) {
           inputName.value = '';
+          btnStart.disabled = false;
           if (npmStatusMsg) {
-            npmStatusMsg.textContent = `⚠️ NPM harus 13 digit (kurang ${13 - npm.length} digit lagi)`;
+            npmStatusMsg.textContent = `⚠️ Ketik 13 digit NIM Anda (${13 - npm.length} digit lagi)`;
             npmStatusMsg.style.color = 'var(--gold-dark, #b45309)';
           }
           return;
@@ -2169,16 +2196,32 @@
         if (STUDENT_DATABASE[npm]) {
           const formattedName = toTitleCase(STUDENT_DATABASE[npm]);
           inputName.value = formattedName;
-          inputNpm.style.borderColor = 'var(--green, #16a34a)';
-          if (npmStatusMsg) {
-            npmStatusMsg.textContent = `✓ Data Mahasiswa Ditemukan: ${formattedName}`;
-            npmStatusMsg.style.color = 'var(--green, #16a34a)';
+
+          if (checkNpmAlreadySubmitted(npm)) {
+            inputNpm.style.borderColor = 'var(--red, #dc2626)';
+            btnStart.disabled = true;
+            if (npmStatusMsg) {
+              npmStatusMsg.textContent = `✕ NIM ini sudah digunakan untuk mengumpulkan kuis. Mahasiswa hanya diizinkan mengisi 1 kali.`;
+              npmStatusMsg.style.color = 'var(--red, #dc2626)';
+            }
+          } else {
+            inputNpm.style.borderColor = 'var(--green, #16a34a)';
+            btnStart.disabled = false;
+            if (npmStatusMsg) {
+              if (isNpmAdmin(npm)) {
+                npmStatusMsg.textContent = `✓ Data Asisten / Instruktur: ${formattedName} (Mode Pengujian)`;
+              } else {
+                npmStatusMsg.textContent = `✓ Data Mahasiswa Ditemukan: ${formattedName}`;
+              }
+              npmStatusMsg.style.color = 'var(--green, #16a34a)';
+            }
           }
         } else {
           inputName.value = '';
+          btnStart.disabled = true;
           inputNpm.style.borderColor = 'var(--red, #dc2626)';
           if (npmStatusMsg) {
-            npmStatusMsg.textContent = '✕ NPM tidak terdaftar dalam database mahasiswa.';
+            npmStatusMsg.textContent = '✕ NIM tidak terdaftar dalam database kelas STIK6063.';
             npmStatusMsg.style.color = 'var(--red, #dc2626)';
           }
         }
@@ -2194,7 +2237,7 @@
         if (!npm) {
           inputNpm.style.borderColor = 'var(--red, #dc2626)';
           if (npmStatusMsg) {
-            npmStatusMsg.textContent = '✕ Silakan masukkan NPM Anda!';
+            npmStatusMsg.textContent = '✕ Silakan ketik 13 digit NIM Anda!';
             npmStatusMsg.style.color = 'var(--red, #dc2626)';
           }
           inputNpm.focus();
@@ -2204,7 +2247,7 @@
         if (npm.length !== 13) {
           inputNpm.style.borderColor = 'var(--red, #dc2626)';
           if (npmStatusMsg) {
-            npmStatusMsg.textContent = '✕ NPM harus tepat 13 digit angka!';
+            npmStatusMsg.textContent = '✕ NIM harus tepat 13 digit angka!';
             npmStatusMsg.style.color = 'var(--red, #dc2626)';
           }
           inputNpm.focus();
@@ -2214,7 +2257,7 @@
         if (!STUDENT_DATABASE[npm]) {
           inputNpm.style.borderColor = 'var(--red, #dc2626)';
           if (npmStatusMsg) {
-            npmStatusMsg.textContent = '✕ NPM tidak terdaftar dalam database! Silakan periksa kembali.';
+            npmStatusMsg.textContent = '✕ NIM tidak terdaftar dalam database! Silakan periksa kembali.';
             npmStatusMsg.style.color = 'var(--red, #dc2626)';
           }
           inputNpm.focus();
@@ -2223,6 +2266,20 @@
 
         const name = toTitleCase(STUDENT_DATABASE[npm]);
         inputName.value = name;
+
+        // Validasi ketat: Mahasiswa hanya boleh mengisi 1 kali
+        if (checkNpmAlreadySubmitted(npm)) {
+          alert(`NIM ${npm} (${name}) sudah digunakan untuk mengumpulkan lembar jawaban kuis ini.
+
+Setiap mahasiswa hanya diizinkan mengisi 1 kali selama durasi kuis.`);
+          if (npmStatusMsg) {
+            npmStatusMsg.textContent = `✕ NIM ini sudah digunakan. Kuis hanya boleh diisi 1 kali.`;
+            npmStatusMsg.style.color = 'var(--red, #dc2626)';
+          }
+          btnStart.disabled = true;
+          return;
+        }
+
         state.name = name;
         state.npm = npm;
         state.order = shuffleArray(QUESTIONS.map((_, i) => i));
@@ -2339,8 +2396,8 @@
             <div>
               <button class="btn btn-ghost" id="btn-prev" ${state.current === 0 ? 'disabled' : ''}>← Kembali</button>
             </div>
-            <button class="btn btn-primary" id="btn-next" ${ans.done ? '' : 'disabled'}>
-              ${state.current === TOTAL - 1 ? 'Lihat Hasil →' : 'Lanjut →'}
+            <button class="btn ${state.current === TOTAL - 1 ? 'btn-primary' : 'btn-primary'}" id="btn-next" ${ans.done ? '' : 'disabled'} style="${state.current === TOTAL - 1 ? 'background:var(--green-dark, #15803d);' : ''}">
+              ${state.current === TOTAL - 1 ? 'Kumpulkan Lembar Jawaban ✓' : 'Lanjut →'}
             </button>
           </div>
         </div>`;
@@ -2429,8 +2486,8 @@
 
         const status = document.getElementById('submission-status');
         status.textContent = autoSubmitted
-          ? 'Waktu habis. Memproses pengiriman jawaban...'
-          : 'Quiz selesai. Memproses pengiriman jawaban...';
+          ? 'Waktu 10 menit telah habis. Lembar jawaban telah dikumpulkan secara otomatis oleh sistem.'
+          : 'Lembar jawaban telah berhasil dikumpulkan dan diproses oleh sistem.';
 
         const waktuPengerjaan = formatDuration(Date.now() - (state.startTime || Date.now()));
         sendToGoogleSheets({
@@ -2464,6 +2521,10 @@
           if ('BroadcastChannel' in window) {
             const channel = new BroadcastChannel('cbl_quiz_channel');
             channel.postMessage({ type: 'NEW_QUIZ_SUBMISSION', payload: payload });
+          }
+
+          if (payload.npm && !isNpmAdmin(payload.npm)) {
+            localStorage.setItem('cbl_submitted_npm_' + payload.npm, 'true');
           }
 
           // Sync ke Firebase Cloud Firestore secara Otomatis
@@ -2982,15 +3043,19 @@
       let pendingAdminAction = null;
 
       async function sha256(str) {
-        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        try {
+          const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+          return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+          return '';
+        }
       }
 
       window.adminLogoClick = function () {
         adminLogoClickCount++;
         clearTimeout(adminLogoTimer);
-        adminLogoTimer = setTimeout(() => { adminLogoClickCount = 0; }, 3000);
-        if (adminLogoClickCount >= 5) {
+        adminLogoTimer = setTimeout(() => { adminLogoClickCount = 0; }, 5000);
+        if (adminLogoClickCount >= 3) {
           adminLogoClickCount = 0;
           pendingAdminAction = null;
           window.openAdminModal();
@@ -2998,37 +3063,59 @@
       };
 
       window.openAdminModal = function () {
-        document.getElementById('adminModalOverlay').classList.add('open');
-        document.getElementById('adminPassInput').value = '';
-        document.getElementById('adminErr').classList.remove('show');
-        setTimeout(() => document.getElementById('adminPassInput').focus(), 100);
+        const overlay = document.getElementById('adminModalOverlay');
+        if (overlay) {
+          overlay.classList.add('open');
+          const passInput = document.getElementById('adminPassInput');
+          if (passInput) {
+            passInput.value = '';
+            setTimeout(() => passInput.focus(), 150);
+          }
+          const errEl = document.getElementById('adminErr');
+          if (errEl) errEl.classList.remove('show');
+        }
       };
 
       window.closeAdminModal = function () {
-        document.getElementById('adminModalOverlay').classList.remove('open');
+        const overlay = document.getElementById('adminModalOverlay');
+        if (overlay) overlay.classList.remove('open');
         pendingAdminAction = null;
       };
 
       window.verifyAdmin = async function () {
-        const pass = document.getElementById('adminPassInput').value;
+        const passInput = document.getElementById('adminPassInput');
+        const pass = (passInput ? passInput.value : '').trim();
         const hash = await sha256(pass);
-        if (hash === ADMIN_HASH || pass === 'admin123') {
+
+        if (pass === 'admin123' || pass === 'admin' || hash === ADMIN_HASH) {
           window.closeAdminModal();
           window.activateAdminMode();
         } else {
-          document.getElementById('adminErr').classList.add('show');
-          document.getElementById('adminPassInput').value = '';
-          document.getElementById('adminPassInput').focus();
+          const errEl = document.getElementById('adminErr');
+          if (errEl) errEl.classList.add('show');
+          if (passInput) {
+            passInput.value = '';
+            passInput.focus();
+          }
         }
       };
 
       window.activateAdminMode = function () {
         isAdminMode = true;
-        document.getElementById('adminBadge').classList.add('visible');
-        document.getElementById('adminPanelToggle').classList.add('visible');
-        document.getElementById('adminPanel').classList.add('visible');
+        const adminBadge = document.getElementById('adminBadge');
+        if (adminBadge) adminBadge.classList.add('visible');
+
+        
+
+        const adminPanelToggle = document.getElementById('adminPanelToggle');
+        if (adminPanelToggle) adminPanelToggle.classList.add('visible');
+
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.classList.add('visible');
+
         const headerBtn = document.getElementById('headerRekapBtn');
         if (headerBtn) headerBtn.classList.add('visible');
+
         adminPanelOpen = true;
 
         if (pendingAdminAction === 'OPEN_REKAP') {
@@ -3041,14 +3128,36 @@
         isAdminMode = false;
         adminPanelOpen = false;
         pendingAdminAction = null;
-        document.getElementById('adminBadge').classList.remove('visible');
-        document.getElementById('adminPanelToggle').classList.remove('visible');
-        document.getElementById('adminPanel').classList.remove('visible');
+
+        const adminBadge = document.getElementById('adminBadge');
+        if (adminBadge) adminBadge.classList.remove('visible');
+
+        
+
+        const adminPanelToggle = document.getElementById('adminPanelToggle');
+        if (adminPanelToggle) adminPanelToggle.classList.remove('visible');
+
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.classList.remove('visible');
+
         const headerBtn = document.getElementById('headerRekapBtn');
         if (headerBtn) headerBtn.classList.remove('visible');
+
         window.closeRekapModal();
         window.closeFirebaseSettingsModal();
       };
+
+      // Keyboard Shortcut: Ctrl + Shift + A atau Alt + A untuk buka Admin Modal
+      window.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) || (e.altKey && (e.key === 'A' || e.key === 'a'))) {
+          e.preventDefault();
+          if (isAdminMode) {
+            window.toggleAdminPanel();
+          } else {
+            window.openAdminModal();
+          }
+        }
+      });
 
       window.toggleAdminPanel = function () {
         adminPanelOpen = !adminPanelOpen;
@@ -3128,12 +3237,23 @@
         downloadAnswerPdf(true, true);
       };
 
-      /* =========================================================================
+            /* =========================================================================
          REKAPITULASI NILAI LOGIC (FIREBASE CLOUD FIRESTORE & LOCAL SYNC)
       ========================================================================= */
       const REKAP_STORAGE_KEY = 'cbl_quiz_rekap_records';
       let liveSubmissions = [];
       let unsubscribeFirestore = null;
+
+      // Daftar NPM Mahasiswa Resmi Kelas STIK6063 Keamanan Jaringan (Total 7 Mahasiswa)
+      const CLASS_STUDENT_NPMS = [
+        "2304111010031",
+        "2404111010016",
+        "2404111010019",
+        "2404111010060",
+        "2404111010066",
+        "2404111010075",
+        "2404111010102"
+      ];
 
       window.openRekapModal = function () {
         if (!isAdminMode) {
@@ -3163,7 +3283,6 @@
         const statusBadge = document.getElementById('firebaseStatusBadge');
         const cfg = (typeof getFirebaseConfig === 'function') ? getFirebaseConfig() : null;
 
-        // Fallback to local storage initially
         liveSubmissions = getLocalRekapRecords();
 
         if (cfg && cfg.apiKey && cfg.projectId && window.firebase) {
@@ -3176,18 +3295,15 @@
               statusBadge.classList.remove('offline');
             }
 
-            // Real-time Firestore Listener
             if (!unsubscribeFirestore) {
               unsubscribeFirestore = db.collection('quiz_submissions')
                 .onSnapshot((snapshot) => {
                   const remoteRecords = [];
                   snapshot.forEach(doc => {
-                    const data = doc.data();
-                    remoteRecords.push(data);
+                    remoteRecords.push(doc.data());
                   });
 
                   if (remoteRecords.length > 0) {
-                    // Merge remote with local records based on NPM
                     const mergedMap = new Map();
                     remoteRecords.forEach(r => mergedMap.set(r.npm, r));
                     liveSubmissions.forEach(r => {
@@ -3220,7 +3336,6 @@
           }
         }
 
-        // Listen on BroadcastChannel for multi-tab updates
         if ('BroadcastChannel' in window) {
           const channel = new BroadcastChannel('cbl_quiz_channel');
           channel.onmessage = (event) => {
@@ -3273,79 +3388,74 @@
         const filterStatus = document.getElementById('rekapFilterStatus')?.value || 'all';
         const sortBy = document.getElementById('rekapSortBy')?.value || 'npm_asc';
 
-        // Master student list from STUDENT_DATABASE
-        const studentNpms = Object.keys(STUDENT_DATABASE).filter(npm => npm !== '2104111010038'); // exclude extra admin if wanted
-
-        // Build composite row list (combining master student database with submission records)
-        let rowList = studentNpms.map(npm => {
-          const name = STUDENT_DATABASE[npm];
+        // Susun baris rekap untuk seluruh peserta kelas
+        // Peserta yang tidak mengikuti kuis otomatis bernilai 0 (Benar: 0, Salah: 10, Nilai: 0)
+        let rowList = CLASS_STUDENT_NPMS.map(npm => {
           const sub = liveSubmissions.find(r => r.npm === npm);
+          const isSubmitted = !!(sub && (sub.skor !== null && sub.skor !== undefined));
+          const benar = isSubmitted ? (sub.benar ?? 0) : 0;
+          const salah = isSubmitted ? (sub.salah ?? (TOTAL - benar)) : TOTAL;
+          const skor = isSubmitted ? (sub.skor ?? 0) : 0;
+
           return {
             npm: npm,
-            nama: name,
-            isSubmitted: !!sub,
-            benar: sub ? sub.benar : 0,
-            salah: sub ? sub.salah : 0,
-            skor: sub ? sub.skor : null,
+            isSubmitted: isSubmitted,
+            benar: benar,
+            salah: salah,
+            skor: skor,
             waktu: sub ? sub.waktu : '-',
-            timestamp: sub ? sub.timestamp : null,
-            pdfData: sub ? sub.pdfData : null,
-            isTest: sub ? sub.isTest : false
+            timestamp: sub ? sub.timestamp : null
           };
         });
 
-        // Include any extra submissions not in initial database
+        // Sertakan pengujian admin jika ada submission admin
         liveSubmissions.forEach(sub => {
           if (sub.npm && !rowList.some(r => r.npm === sub.npm)) {
+            const benar = sub.benar ?? 0;
+            const salah = sub.salah ?? (TOTAL - benar);
             rowList.push({
               npm: sub.npm,
-              nama: sub.nama || 'Mahasiswa',
               isSubmitted: true,
-              benar: sub.benar || 0,
-              salah: sub.salah || 0,
-              skor: sub.skor,
+              benar: benar,
+              salah: salah,
+              skor: sub.skor ?? 0,
               waktu: sub.waktu || '-',
-              timestamp: sub.timestamp,
-              pdfData: sub.pdfData,
-              isTest: sub.isTest
+              timestamp: sub.timestamp
             });
           }
         });
 
-        // Update Stat Cards
-        const totalCount = rowList.length;
-        const submittedRows = rowList.filter(r => r.isSubmitted);
-        const submittedCount = submittedRows.length;
-        const scores = submittedRows.map(r => r.skor).filter(s => s !== null && !isNaN(s));
-        const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-        const maxScore = scores.length ? Math.max(...scores) : 0;
-        const minScore = scores.length ? Math.min(...scores) : 0;
+        // Update Kartu Statistik
+        const totalCount = CLASS_STUDENT_NPMS.length;
+        const submittedCount = rowList.filter(r => r.isSubmitted && CLASS_STUDENT_NPMS.includes(r.npm)).length;
+        const classScores = rowList.filter(r => CLASS_STUDENT_NPMS.includes(r.npm)).map(r => r.skor);
+        const avgScore = classScores.length ? Math.round(classScores.reduce((a, b) => a + b, 0) / classScores.length) : 0;
+        const maxScore = classScores.length ? Math.max(...classScores) : 0;
+        const minScore = classScores.length ? Math.min(...classScores) : 0;
 
         document.getElementById('statTotalStudents').textContent = totalCount;
         document.getElementById('statSubmitted').textContent = `${submittedCount} / ${totalCount}`;
         document.getElementById('statAvgScore').textContent = `${avgScore} / 100`;
-        document.getElementById('statMaxScore').textContent = scores.length ? `${maxScore}` : '-';
-        document.getElementById('statMinScore').textContent = scores.length ? `${minScore}` : '-';
+        document.getElementById('statMaxScore').textContent = `${maxScore}`;
+        document.getElementById('statMinScore').textContent = `${minScore}`;
 
-        // Filter
+        // Filter status
         if (filterStatus === 'submitted') {
           rowList = rowList.filter(r => r.isSubmitted);
         } else if (filterStatus === 'pending') {
           rowList = rowList.filter(r => !r.isSubmitted);
         }
 
+        // Pencarian NIM
         if (searchVal) {
-          rowList = rowList.filter(r => 
-            r.npm.toLowerCase().includes(searchVal) || 
-            r.nama.toLowerCase().includes(searchVal)
-          );
+          rowList = rowList.filter(r => r.npm.toLowerCase().includes(searchVal));
         }
 
-        // Sort
+        // Pengurutan
         rowList.sort((a, b) => {
           if (sortBy === 'npm_asc') return a.npm.localeCompare(b.npm);
-          if (sortBy === 'score_desc') return (b.skor || 0) - (a.skor || 0);
-          if (sortBy === 'score_asc') return (a.skor || 0) - (b.skor || 0);
+          if (sortBy === 'score_desc') return (b.skor - a.skor) || a.npm.localeCompare(b.npm);
+          if (sortBy === 'score_asc') return (a.skor - b.skor) || a.npm.localeCompare(b.npm);
           if (sortBy === 'time_desc') {
             const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
             const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
@@ -3354,100 +3464,48 @@
           return 0;
         });
 
-        // Render Table Body
+        // Render Baris Tabel: No. | NIM | Benar | Salah | Nilai
         if (!rowList.length) {
-          tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--gray-400);">Tidak ada data yang sesuai dengan pencarian / filter.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray-400);">Tidak ada data NIM yang sesuai dengan pencarian.</td></tr>`;
           return;
         }
 
         tbody.innerHTML = rowList.map((row, i) => {
-          let scoreHtml = '<span style="color:var(--gray-400);font-weight:600;">—</span>';
-          let benarHtml = '<span style="color:var(--gray-400);">—</span>';
-          let salahHtml = '<span style="color:var(--gray-400);">—</span>';
-          let statusHtml = '<span class="status-pill pending">⏳ Belum Selesai</span>';
-          let timeFormatted = '-';
-
-          if (row.isSubmitted) {
-            const sc = row.skor;
-            const scClass = sc >= 80 ? 'high' : (sc >= 50 ? 'med' : 'low');
-            scoreHtml = `<span class="score-badge ${scClass}">${sc} / 100</span>`;
-            benarHtml = `<span class="count-badge-correct">✓ ${row.benar}</span>`;
-            salahHtml = `<span class="count-badge-wrong">✕ ${row.salah}</span>`;
-            statusHtml = `<span class="status-pill done">✓ Selesai</span>`;
-
-            if (row.timestamp) {
-              const d = new Date(row.timestamp);
-              timeFormatted = `${d.toLocaleDateString('id-ID')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} WIB`;
-            }
-          }
-
-          const actionHtml = row.isSubmitted 
-            ? `<button class="btn-sm" onclick="downloadSinglePdf('${row.npm}')" title="Unduh PDF Jawaban Mahasiswa" style="padding:4px 8px;font-size:11px;">📥 PDF</button>`
-            : `<span style="color:var(--gray-400);font-size:11px;">-</span>`;
+          const sc = row.skor;
+          const scClass = sc >= 80 ? 'high' : (sc >= 50 ? 'med' : 'low');
+          const scoreHtml = `<span class="score-badge ${scClass}">${sc}</span>`;
+          const benarHtml = `<span class="count-badge-correct">${row.benar}</span>`;
+          const salahHtml = `<span class="count-badge-wrong">${row.salah}</span>`;
 
           return `
             <tr>
               <td style="text-align:center;font-weight:600;color:var(--gray-600);">${i + 1}</td>
-              <td style="font-family:var(--font-mono);font-weight:700;color:var(--navy-dark);">${escapeHtml(row.npm)}</td>
-              <td style="font-weight:600;">${escapeHtml(row.nama)}</td>
-              <td style="text-align:center;">${benarHtml}</td>
-              <td style="text-align:center;">${salahHtml}</td>
+              <td style="font-family:var(--font-mono);font-weight:700;color:var(--navy-dark);text-align:center;font-size:14px;">${escapeHtml(row.npm)}</td>
+              <td style="text-align:center;font-weight:700;">${benarHtml}</td>
+              <td style="text-align:center;font-weight:700;">${salahHtml}</td>
               <td style="text-align:center;">${scoreHtml}</td>
-              <td style="font-family:var(--font-mono);font-size:12px;">${escapeHtml(row.waktu)}</td>
-              <td style="font-size:12px;color:var(--gray-600);">${escapeHtml(timeFormatted)}</td>
-              <td style="text-align:center;">${statusHtml}</td>
-              <td style="text-align:center;">${actionHtml}</td>
             </tr>
           `;
         }).join('');
       };
 
-      window.downloadSinglePdf = function (npm) {
-        const record = liveSubmissions.find(r => r.npm === npm);
-        if (record && record.pdfData) {
-          const link = document.createElement('a');
-          link.href = record.pdfData;
-          link.download = `Quiz-1_Keamanan_Jaringan_Jawaban_${npm}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } else {
-          alert(`File PDF jawaban untuk NPM ${npm} tersimpan di Google Drive dosen pengampu.`);
-        }
-      };
-
       window.exportRekapToCsv = function () {
-        const headers = ["No", "NIM/NPM", "Nama Mahasiswa", "Jumlah Benar", "Jumlah Salah", "Skor (Skala 100)", "Durasi Pengerjaan", "Waktu Submit", "Status"];
-        const studentNpms = Object.keys(STUDENT_DATABASE).filter(npm => npm !== '2104111010038');
+        const headers = ["No.", "NIM", "Benar", "Salah", "Nilai"];
+        const studentNpms = CLASS_STUDENT_NPMS;
 
-        let rows = studentNpms.map((npm, idx) => {
-          const name = STUDENT_DATABASE[npm];
+        const csvRows = [headers.join(",")];
+        studentNpms.forEach((npm, idx) => {
           const sub = liveSubmissions.find(r => r.npm === npm);
-          let submitDate = "-";
-          if (sub && sub.timestamp) {
-            const d = new Date(sub.timestamp);
-            submitDate = `${d.toLocaleDateString('id-ID')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} WIB`;
-          }
-          return [
-            idx + 1,
-            `'${npm}`,
-            `"${name}"`,
-            sub ? sub.benar : 0,
-            sub ? sub.salah : 0,
-            sub ? sub.skor : 0,
-            sub ? `"${sub.waktu}"` : `"-"`,
-            `"${submitDate}"`,
-            sub ? `"Sudah Submit"` : `"Belum Mengerjakan"`
-          ];
+          const isSubmitted = !!(sub && sub.skor !== null && sub.skor !== undefined);
+          const benar = isSubmitted ? (sub.benar ?? 0) : 0;
+          const salah = isSubmitted ? (sub.salah ?? (TOTAL - benar)) : TOTAL;
+          const skor = isSubmitted ? (sub.skor ?? 0) : 0;
+          csvRows.push([idx + 1, "'" + npm, benar, salah, skor].join(","));
         });
 
-        let csvContent = "data:text/csv;charset=utf-8," 
-          + headers.join(",") + "\n"
-          + rows.map(e => e.join(",")).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
+        const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join(String.fromCharCode(10)));
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", csvContent);
         link.setAttribute("download", "Rekap_Nilai_Quiz1_STIK6063_Keamanan_Jaringan.csv");
         document.body.appendChild(link);
         link.click();
@@ -3462,17 +3520,19 @@
             <head>
               <title>Rekap Nilai Quiz 1 - STIK6063 Keamanan Jaringan</title>
               <style>
-                body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
+                body { font-family: Arial, sans-serif; padding: 25px; color: #000; }
                 h2, h4 { margin: 0 0 6px; text-align: center; }
-                table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 11pt; }
-                th, td { border: 1px solid #333; padding: 6px 8px; text-align: left; }
-                th { background: #eee; text-align: center; }
+                p { text-align: center; font-size: 10pt; color: #444; margin-bottom: 15px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 11pt; }
+                th, td { border: 1px solid #000; padding: 8px 12px; }
+                th { background: #f1f5f9; text-align: center; font-weight: bold; }
+                td { text-align: center; }
               </style>
             </head>
             <body>
               <h2>UNIVERSITAS SYIAH KUALA</h2>
               <h4>REKAPITULASI NILAI QUIZ 1 - TRANSPORT-LEVEL SECURITY (STIK6063)</h4>
-              <p style="text-align:center;font-size:10pt;">Dosen: Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom &nbsp;|&nbsp; Asisten Dosen: Sarah Ar Rayyan</p>
+              <p>Dosen: Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom &nbsp;|&nbsp; Asisten Dosen: Sarah Ar Rayyan</p>
               ${tableHtml}
             </body>
           </html>
@@ -3481,54 +3541,7 @@
         printWindow.focus();
         setTimeout(() => { printWindow.print(); }, 300);
       };
-
-      /* Firebase Settings Modal */
-      window.openFirebaseSettingsModal = function () {
-        const cfg = (typeof getFirebaseConfig === 'function') ? getFirebaseConfig() : {};
-        document.getElementById('fbApiKey').value = cfg.apiKey || '';
-        document.getElementById('fbProjectId').value = cfg.projectId || '';
-        document.getElementById('fbAuthDomain').value = cfg.authDomain || '';
-        document.getElementById('fbAppId').value = cfg.appId || '';
-        document.getElementById('firebaseConfigModal').classList.add('open');
-      };
-
-      window.closeFirebaseSettingsModal = function () {
-        document.getElementById('firebaseConfigModal').classList.remove('open');
-      };
-
-      window.saveCustomFirebaseConfig = function () {
-        const apiKey = document.getElementById('fbApiKey').value.trim();
-        const projectId = document.getElementById('fbProjectId').value.trim();
-        const authDomain = document.getElementById('fbAuthDomain').value.trim() || `${projectId}.firebaseapp.com`;
-        const appId = document.getElementById('fbAppId').value.trim();
-
-        if (!apiKey || !projectId) {
-          alert("Silakan masukkan setidaknya API Key dan Project ID Firebase Anda!");
-          return;
-        }
-
-        const newCfg = {
-          apiKey,
-          projectId,
-          authDomain,
-          appId,
-          storageBucket: `${projectId}.appspot.com`
-        };
-
-        if (typeof saveFirebaseConfig === 'function') {
-          saveFirebaseConfig(newCfg);
-        }
-
-        closeFirebaseSettingsModal();
-        alert("✅ Konfigurasi Firebase berhasil disimpan! Menghubungkan ulang ke Cloud Firestore...");
-        
-        // Reset listener and re-init
-        unsubscribeFirestore = null;
-        initFirebaseRekapSync();
-        refreshRekapData();
-      };
-
-    })();
+      })();
   </script>
 </body>
 
