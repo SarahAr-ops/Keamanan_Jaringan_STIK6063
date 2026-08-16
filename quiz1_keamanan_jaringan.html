@@ -1772,8 +1772,9 @@
         </div>
         <div class="rekap-header-actions">
           <span class="badge-cloud" id="firebaseStatusBadge">🟢 Cloud Firestore Sync</span>
+          <button class="btn-sm btn-sm-primary" onclick="exportRekapToPdf()" title="Unduh Rekap Format Resmi PDF USK">📄 Unduh PDF Rekap</button>
           <button class="btn-sm" onclick="exportRekapToCsv()" title="Unduh CSV / Excel">📥 Ekspor Excel</button>
-          <button class="btn-sm" onclick="printRekapTable()" title="Cetak Tabel">🖨️ Cetak</button>
+          <button class="btn-sm" onclick="printRekapTable()" title="Cetak Format Resmi">🖨️ Cetak</button>
           <button class="btn-sm" onclick="openFirebaseSettingsModal()" title="Pengaturan Firebase">⚙️ Firebase</button>
           <button class="btn-sm" onclick="closeRekapModal()" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;">✕ Tutup</button>
         </div>
@@ -3399,6 +3400,7 @@ Setiap mahasiswa hanya diizinkan mengisi 1 kali selama durasi kuis.`);
 
           return {
             npm: npm,
+            isAdminTest: false,
             isSubmitted: isSubmitted,
             benar: benar,
             salah: salah,
@@ -3408,13 +3410,14 @@ Setiap mahasiswa hanya diizinkan mengisi 1 kali selama durasi kuis.`);
           };
         });
 
-        // Sertakan pengujian admin jika ada submission admin
+        // Sertakan hasil pengujian admin di Tabel Modal Web agar dapat melihat hasil uji coba kuis
         liveSubmissions.forEach(sub => {
           if (sub.npm && !rowList.some(r => r.npm === sub.npm)) {
             const benar = sub.benar ?? 0;
             const salah = sub.salah ?? (TOTAL - benar);
             rowList.push({
               npm: sub.npm,
+              isAdminTest: true,
               isSubmitted: true,
               benar: benar,
               salah: salah,
@@ -3480,7 +3483,10 @@ Setiap mahasiswa hanya diizinkan mengisi 1 kali selama durasi kuis.`);
           return `
             <tr>
               <td style="text-align:center;font-weight:600;color:var(--gray-600);">${i + 1}</td>
-              <td style="font-family:var(--font-mono);font-weight:700;color:var(--navy-dark);text-align:center;font-size:14px;">${escapeHtml(row.npm)}</td>
+              <td style="font-family:var(--font-mono);font-weight:700;color:var(--navy-dark);text-align:center;font-size:14px;">
+                ${escapeHtml(row.npm)}
+                ${row.isAdminTest ? '<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:#e0e7ff;color:#4338ca;font-weight:600;margin-left:6px;">Uji Admin</span>' : ''}
+              </td>
               <td style="text-align:center;font-weight:700;">${benarHtml}</td>
               <td style="text-align:center;font-weight:700;">${salahHtml}</td>
               <td style="text-align:center;">${scoreHtml}</td>
@@ -3512,36 +3518,266 @@ Setiap mahasiswa hanya diizinkan mengisi 1 kali selama durasi kuis.`);
         document.body.removeChild(link);
       };
 
-      window.printRekapTable = function () {
-        const printWindow = window.open('', '_blank');
-        const tableHtml = document.getElementById('rekapTable').outerHTML;
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Rekap Nilai Quiz 1 - STIK6063 Keamanan Jaringan</title>
-              <style>
-                body { font-family: Arial, sans-serif; padding: 25px; color: #000; }
-                h2, h4 { margin: 0 0 6px; text-align: center; }
-                p { text-align: center; font-size: 10pt; color: #444; margin-bottom: 15px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 11pt; }
-                th, td { border: 1px solid #000; padding: 8px 12px; }
-                th { background: #f1f5f9; text-align: center; font-weight: bold; }
-                td { text-align: center; }
-              </style>
-            </head>
-            <body>
-              <h2>UNIVERSITAS SYIAH KUALA</h2>
-              <h4>REKAPITULASI NILAI QUIZ 1 - TRANSPORT-LEVEL SECURITY (STIK6063)</h4>
-              <p>Dosen: Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom &nbsp;|&nbsp; Asisten Dosen: Sarah Ar Rayyan</p>
-              ${tableHtml}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => { printWindow.print(); }, 300);
+                  window.exportRekapToPdf = async function (mode = 'download') {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+          alert('jsPDF library tidak tersedia.');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        const pageWidth = 210;
+        const pageHeight = 297;
+
+        // Margins
+        const marginLeft = 15;
+        const marginRight = 15;
+        const marginTop = 12;
+        const marginBottom = 15;
+        const contentWidth = pageWidth - marginLeft - marginRight; // 180mm
+
+        // 1. Data Processing: Hanya memuat mahasiswa resmi kelas (tanpa admin)
+        const totalCount = CLASS_STUDENT_NPMS.length;
+        let submittedCount = 0;
+
+        let rowList = CLASS_STUDENT_NPMS.map(npm => {
+          const sub = liveSubmissions.find(r => r.npm === npm);
+          const isSubmitted = !!(sub && (sub.skor !== null && sub.skor !== undefined));
+          if (isSubmitted) submittedCount++;
+          const benar = isSubmitted ? (sub.benar ?? 0) : 0;
+          const salah = isSubmitted ? (sub.salah ?? (TOTAL - benar)) : TOTAL;
+          const skor = isSubmitted ? (sub.skor ?? 0) : 0;
+          return { npm, isSubmitted, benar, salah, skor };
+        });
+
+        // Urutkan persis (NIM naik)
+        rowList.sort((a, b) => a.npm.localeCompare(b.npm));
+
+        const unsubmittedCount = Math.max(0, totalCount - submittedCount);
+        const scores = rowList.map(r => r.skor);
+        const avgScore = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : "0.0";
+        const maxScore = scores.length ? Math.max(...scores) : 0;
+
+        // Tanggal & Waktu Sekarang
+        const now = new Date();
+        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const dateFormatted = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+        const timeFormatted = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WIB`;
+
+        let y = marginTop;
+
+        const drawFooter = () => {
+          pdf.setFont('times', 'normal');
+          pdf.setFontSize(8.5);
+          pdf.setTextColor(90, 90, 90);
+          pdf.text('Teknik Komputer - DTEK - FT - USK', pageWidth / 2, pageHeight - 8, { align: 'center' });
+        };
+
+        // 2. Gambar Header Box
+        const headerH = 34;
+        const splitX = marginLeft + 42;
+
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.35);
+        pdf.rect(marginLeft, y, contentWidth, headerH);
+        pdf.line(splitX, y, splitX, y + headerH);
+
+        // Logo USK di kotak kiri
+        try {
+          if (USK_LOGO_BASE64 && USK_LOGO_BASE64.length > 50) {
+            pdf.addImage(USK_LOGO_BASE64, 'PNG', marginLeft + 4, y + 5.5, 34, 18.86, undefined, 'FAST');
+          }
+        } catch (eLogo) {
+          console.warn("Logo base64 error in rekap PDF:", eLogo);
+        }
+
+        // Teks Header di kotak kanan
+        const centerRight = splitX + ((marginLeft + contentWidth - splitX) / 2);
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9.5);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('UNIVERSITAS SYIAH KUALA', centerRight, y + 4.5, { align: 'center' });
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8.5);
+        pdf.text('FAKULTAS TEKNIK - DEPARTEMEN TEKNIK ELEKTRO DAN KOMPUTER', centerRight, y + 8.5, { align: 'center' });
+        pdf.text('LABORATORIUM JARINGAN KOMPUTER', centerRight, y + 12.5, { align: 'center' });
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9);
+        pdf.text('DAFTAR REKAPITULASI NILAI QUIZ 1', centerRight, y + 17.0, { align: 'center' });
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.text('Mata Kuliah: STIK6063 - Keamanan Jaringan | Materi: Transport-Level Security', centerRight, y + 21.0, { align: 'center' });
+        pdf.text('Dosen Pengampu: Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom', centerRight, y + 25.0, { align: 'center' });
+        pdf.text('Asisten Dosen: Sarah Ar Rayyan', centerRight, y + 29.0, { align: 'center' });
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(7.5);
+        pdf.text(`Tanggal Cetak Rekap: ${dateFormatted}, Jam: ${timeFormatted}`, centerRight, y + 32.5, { align: 'center' });
+
+        y += headerH + 5;
+
+        // 3. Gambar Tabel Rekap
+        const colW = [14, 66, 33, 33, 34]; // total 180mm
+        const colHeaders = ["No.", "NIM", "Benar", "Salah", "Nilai"];
+        const rowH = 6.2;
+        const thH = 7.0;
+
+        const drawTableHeader = (currY) => {
+          pdf.setFillColor(13, 43, 85); // Navy
+          pdf.rect(marginLeft, currY, contentWidth, thH, 'F');
+          pdf.setDrawColor(0, 0, 0);
+          pdf.setLineWidth(0.3);
+          pdf.rect(marginLeft, currY, contentWidth, thH, 'D');
+
+          let curX = marginLeft;
+          colW.forEach((w, i) => {
+            if (i > 0) pdf.line(curX, currY, curX, currY + thH);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(8.5);
+            pdf.setTextColor(255, 255, 255);
+            pdf.text(colHeaders[i], curX + (w / 2), currY + 4.8, { align: 'center' });
+            curX += w;
+          });
+        };
+
+        drawTableHeader(y);
+        y += thH;
+
+        rowList.forEach((row, idx) => {
+          // Check page break
+          if (y + rowH > pageHeight - marginBottom - 45) {
+            drawFooter();
+            pdf.addPage();
+            y = marginTop;
+            drawTableHeader(y);
+            y += thH;
+          }
+
+          // Alternating row bg
+          if (idx % 2 === 1) {
+            pdf.setFillColor(248, 250, 252);
+            pdf.rect(marginLeft, y, contentWidth, rowH, 'F');
+          }
+
+          // Border row
+          pdf.setDrawColor(200, 205, 215);
+          pdf.setLineWidth(0.2);
+          pdf.rect(marginLeft, y, contentWidth, rowH, 'D');
+
+          let curX = marginLeft;
+          pdf.line(curX, y, curX, y + rowH); // left
+
+          // No.
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(String(idx + 1), curX + (colW[0] / 2), y + 4.3, { align: 'center' });
+          curX += colW[0];
+          pdf.line(curX, y, curX, y + rowH);
+
+          // NIM
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(8.5);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(row.npm, curX + (colW[1] / 2), y + 4.3, { align: 'center' });
+          curX += colW[1];
+          pdf.line(curX, y, curX, y + rowH);
+
+          // Benar
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8);
+          pdf.setTextColor(row.benar > 0 ? 21 : 140, row.benar > 0 ? 128 : 140, row.benar > 0 ? 61 : 140);
+          pdf.text(String(row.benar), curX + (colW[2] / 2), y + 4.3, { align: 'center' });
+          curX += colW[2];
+          pdf.line(curX, y, curX, y + rowH);
+
+          // Salah
+          pdf.setFont('helvetica', 'normal');
+          pdf.setFontSize(8);
+          pdf.setTextColor(row.salah > 0 ? 185 : 140, row.salah > 0 ? 28 : 140, row.salah > 0 ? 28 : 140);
+          pdf.text(String(row.salah), curX + (colW[3] / 2), y + 4.3, { align: 'center' });
+          curX += colW[3];
+          pdf.line(curX, y, curX, y + rowH);
+
+          // Nilai
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(8.5);
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(String(row.skor), curX + (colW[4] / 2), y + 4.3, { align: 'center' });
+          curX += colW[4];
+          pdf.line(curX, y, curX, y + rowH);
+
+          y += rowH;
+        });
+
+        // 4. Gambar Kotak Ringkasan Statistik & Tanda Tangan Dosen
+        y += 6;
+
+        if (y + 40 > pageHeight - marginBottom) {
+          drawFooter();
+          pdf.addPage();
+          y = marginTop;
+        }
+
+        const statBoxW = 82;
+        const statBoxH = 28;
+
+        // Kotak Statistik (Kiri)
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.3);
+        pdf.rect(marginLeft, y, statBoxW, statBoxH);
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('RINGKASAN STATISTIK KELAS', marginLeft + 4, y + 5.5);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.text(`• Total Mahasiswa Kelas : ${totalCount} orang`, marginLeft + 4, y + 10.5);
+        pdf.text(`• Jumlah Mengikuti Kuis : ${submittedCount} orang`, marginLeft + 4, y + 15.0);
+        pdf.text(`• Tidak/Belum Mengikuti : ${unsubmittedCount} orang (Nilai 0)`, marginLeft + 4, y + 19.5);
+        pdf.text(`• Nilai Rata-rata / Tertinggi : ${avgScore} / ${maxScore}`, marginLeft + 4, y + 24.0);
+
+        // Tanda Tangan Dosen (Kanan)
+        const signX = marginLeft + contentWidth - 75;
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`Banda Aceh, ${dateFormatted}`, signX, y + 5.5);
+        pdf.text('Dosen Pengampu,', signX, y + 9.5);
+
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(8.5);
+        pdf.text('Prof. Dr. Ir. Teuku Yuliar Arif, ST., M.Kom', signX, y + 27.5);
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.text('NIP. 197407152000031001', signX, y + 31.5);
+
+        drawFooter();
+
+        if (mode === 'print') {
+          // Buka PDF asli beresolusi tinggi langsung untuk dicetak
+          pdf.autoPrint();
+          const blobUrl = pdf.output('bloburl');
+          window.open(blobUrl, '_blank');
+        } else {
+          // Unduh file PDF asli
+          pdf.save(`Daftar_Rekapitulasi_Nilai_Quiz1_STIK6063_${dateFormatted.replace(/\s+/g, '_')}.pdf`);
+        }
       };
-      })();
+
+      window.printRekapTable = function () {
+        // Gabungkan/samakan hasil cetak dengan hasil PDF jsPDF
+        window.exportRekapToPdf('print');
+      };
+})();
   </script>
 </body>
 
